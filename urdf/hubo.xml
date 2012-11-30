@@ -1,0 +1,431 @@
+<robot name="hubo_arm">
+	<link name="torso"/>
+	<link name="leftArm"/>
+	<link name="leftWrist"/>
+	<link name="rightArm"/>
+	<link name="rightWrist"/>
+	<link name="leftHip"/>
+	<link name="leftThigh"/>
+	<link name="leftCalf"/>
+	<link name="leftFoot"/>
+	<link name="rightHip"/>
+	<link name="rightThigh"/>
+	<link name="rightCalf"/>
+	<link name="rightFoot"/>
+	<link name="righHand"/>
+	<link name="rProximalPhalanx1"/>
+	<link name="rMiddlePhalanx1"/>
+	<link name="rDistalPhalanx1"/>
+	<link name="rProximalPhalanx2"/>
+	<link name="rMiddlePhalanx2"/>
+	<link name="rDistalPhalanx2"/>
+	<link name="rProximalPhalanx3"/>
+	<link name="rMiddlePhalanx3"/>
+	<link name="rDistalPhalanx3"/>
+	<link name="rProximalPhalanx4"/>
+	<link name="rMiddlePhalanx4"/>
+	<link name="rDistalPhalanx4"/>
+	<link name="rProximalPhalanx5"/>
+	<link name="rMiddlePhalanx5"/>
+	<link name="rDistalPhalanx5"/>
+	<link name="lProximalPhalanx1"/>
+	<link name="lMiddlePhalanx1"/>
+	<link name="lDistalPhalanx1"/>
+	<link name="lProximalPhalanx2"/>
+	<link name="lMiddlePhalanx2"/>
+	<link name="lDistalPhalanx2"/>
+	<link name="lProximalPhalanx3"/>
+	<link name="lMiddlePhalanx3"/>
+	<link name="lDistalPhalanx3"/>
+	<link name="lProximalPhalanx4"/>
+	<link name="lMiddlePhalanx4"/>
+	<link name="lDistalPhalanx4"/>
+	<link name="lProximalPhalanx5"/>
+	<link name="lMiddlePhalanx5"/>
+	<link name="lDistalPhalanx5"/>
+
+	<joint name="WST" type="revolute">
+		<parent link="torso"/>
+		<child link="leftHip"/>
+		<origin xyz="0 0 0.107" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="NKY" type="revolute">
+		<parent link="torso"/>
+		<child link="virtual_link"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="NK1" type="revolute">
+		<parent link="torso"/>
+		<child link="virtual_link"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LSP" type="revolute">
+		<parent link="torso"/>
+		<child link="leftArm"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LSR" type="revolute">
+		<parent link="torso"/>
+		<child link="leftArm"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LSY" type="revolute">
+		<parent link="torso"/>
+		<child link="leftArm"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LEB" type="revolute">
+		<parent link="leftArm"/>
+		<child link="leftWrist"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LWP" type="revolute">
+		<parent link="leftWrist"/>
+		<child link="leftHand"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RSP" type="revolute">
+		<parent link="torso"/>
+		<child link="rightArm"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RSR" type="revolute">
+		<parent link="torso"/>
+		<child link="rightArm"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RSY" type="revolute">
+		<parent link="torso"/>
+		<child link="rightArm"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="REB" type="revolute">
+		<parent link="rightArm"/>
+		<child link="rightWrist"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RWP" type="revolute">
+		<parent link="rightWrist"/>
+		<child link="rightHand"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LHY" type="revolute">
+		<parent link="leftHip"/>
+		<child link="leftThigh"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LHR" type="revolute">
+		<parent link="leftHip"/>
+		<child link="leftThigh"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LHP" type="revolute">
+		<parent link="leftHip"/>
+		<child link="leftThigh"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LKN" type="revolute">
+		<parent link="leftThigh"/>
+		<child link="leftCalf"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LAP" type="revolute">
+		<parent link="leftCalf"/>
+		<child link="leftFoot"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LAR" type="revolute">
+		<parent link="leftCalf"/>
+		<child link="leftFoot"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RHY" type="revolute">
+		<parent link="rightHip"/>
+		<child link="rightThigh"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RHR" type="revolute">
+		<parent link="rightHip"/>
+		<child link="rightThigh"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RHP" type="revolute">
+		<parent link="rightHip"/>
+		<child link="rightThigh"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RKN" type="revolute">
+		<parent link="rightThigh"/>
+		<child link="rightCalf"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RAP" type="revolute">
+		<parent link="rightCalf"/>
+		<child link="rightFoot"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RAR" type="revolute">
+		<parent link="rightCalf"/>
+		<child link="rightFoot"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF1a" type="revolute">
+		<parent link="rightHand"/>
+		<child link="rProximalPhalanx1"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF1b" type="revolute">
+		<parent link="rProximalPhalanx1"/>
+		<child link="rMiddlePhalanx1"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF1c" type="revolute">
+		<parent link="rMiddlePhalanx1"/>
+		<child link="rDistalPhalanx1"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF2a" type="revolute">
+		<parent link="rightHand"/>
+		<child link="rProximalPhalanx2"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF2b" type="revolute">
+		<parent link="rProximalPhalanx2"/>
+		<child link="rMiddlePhalanx2"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF2c" type="revolute">
+		<parent link="rMiddlePhalanx2"/>
+		<child link="rDistalPhalanx2"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF3a" type="revolute">
+		<parent link="rightHand"/>
+		<child link="rProximalPhalanx3"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF3b" type="revolute">
+		<parent link="rProximalPhalanx3"/>
+		<child link="rMiddlePhalanx3"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF3c" type="revolute">
+		<parent link="rMiddlePhalanx3"/>
+		<child link="rDistalPhalanx3"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF4a" type="revolute">
+		<parent link="rightHand"/>
+		<child link="rProximalPhalanx4"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF4b" type="revolute">
+		<parent link="rProximalPhalanx4"/>
+		<child link="rMiddlePhalanx4"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF4c" type="revolute">
+		<parent link="rMiddlePhalanx4"/>
+		<child link="rDistalPhalanx4"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF5a" type="revolute">
+		<parent link="rightHand"/>
+		<child link="rProximalPhalanx5"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF5b" type="revolute">
+		<parent link="rProximalPhalanx5"/>
+		<child link="rMiddlePhalanx5"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="RF5c" type="revolute">
+		<parent link="lMiddlePhalanx5"/>
+		<child link="lDistalPhalanx5"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF1a" type="revolute">
+		<parent link="leftHand"/>
+		<child link="lProximalPhalanx1"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF1b" type="revolute">
+		<parent link="lProximalPhalanx1"/>
+		<child link="lMiddlePhalanx1"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF1c" type="revolute">
+		<parent link="lMiddlePhalanx1"/>
+		<child link="lDistalPhalanx1"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF2a" type="revolute">
+		<parent link="LeftHand"/>
+		<child link="lProximalPhalanx2"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF2b" type="revolute">
+		<parent link="lProximalPhalanx2"/>
+		<child link="lMiddlePhalanx2"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF2c" type="revolute">
+		<parent link="lMiddlePhalanx2"/>
+		<child link="lDistalPhalanx2"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF3a" type="revolute">
+		<parent link="leftHand"/>
+		<child link="lProximalPhalanx3"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF3b" type="revolute">
+		<parent link="lProximalPhalanx3"/>
+		<child link="lMiddlePhalanx3"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF3c" type="revolute">
+		<parent link="lMiddlePhalanx3"/>
+		<child link="lDistalPhalanx3"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF4a" type="revolute">
+		<parent link="leftHand"/>
+		<child link="lProximalPhalanx4"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF4b" type="revolute">
+		<parent link="lProximalPhalanx4"/>
+		<child link="lMiddlePhalanx4"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF4c" type="revolute">
+		<parent link="lMiddlePhalanx4"/>
+		<child link="lDistalPhalanx4"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF5a" type="revolute">
+		<parent link="leftHand"/>
+		<child link="lProximalPhalanx5"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF5b" type="revolute">
+		<parent link="lProximalPhalanx5"/>
+		<child link="lMiddlePhalanx5"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+
+	<joint name="LF5c" type="revolute">
+		<parent link="lMiddlePhalanx5"/>
+		<child link="lDistalPhalanx5"/>
+		<origin xyz="0 0 0" rpy="0 0 0"/>
+		<axis xyz="0 0 1"/>
+	</joint>
+</robot>
