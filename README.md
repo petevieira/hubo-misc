@@ -33,3 +33,10 @@ hubo-documentation
 ------------------
 This directory is for useful documentation on Hubo
 
+robotics-textbooks
+------------------
+This directory contains recommended robotics textbooks
+
+robotics-papers
+---------------
+This directory contains possibly useful robotics papers
