@@ -24,9 +24,11 @@ This directory is for Hubo's URDF files for DART/GRIP
 This file contains the xml code for Hubo's entire body.
 
 Initialze ROS URDF Parser:
+	
 	$ rosmake urdf_parser
 
-Run URDF Parser to check URDF file
+Run URDF Parser to check URDF file:
+	
 	$ rosrun urdf_parser check_urdf hubo.xml
 
 hubo-documentation
