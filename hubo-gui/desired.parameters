@@ -1,0 +1,32 @@
+Functions:
+	Walk (steps, distance, speed)
+	Sidestep (steps, distance)
+	Close Hand
+	Open Hand
+	Move JNT (angle(in degrees))
+		or
+	Move (Joint selected from interactive picture, angle(in degrees))
+
+Feedback:
+	42 Motors:
+		Motor position
+		Motor current
+		Motor velocity
+		Motor temperature
+		Motor heat(joules)
+		Motor active or not
+		Motor zeroed or not
+	
+	Force/Torque Sensors in 1 in each wrist and each ankle (4 total):
+		Moment about x-axis
+		Moment about y-axis
+		Force along z-direction
+
+	IMU in the Waist(WST):
+		Angular velocity about x-axis
+		Angular velocity about y-axis
+		Angular velocity about z-axis
+		Linear acceleration in x-direction
+		Linear acceleration in y-direction
+		Linear acceleration in z-direction
+	ZMP
