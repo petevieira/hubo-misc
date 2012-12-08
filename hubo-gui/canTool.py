@@ -3,7 +3,7 @@ import wx				# wxWidgets library
 import jointsPanel 		# Module which creates a panel of all joints with textctrls for each
 import motorPanel	# Module which creates a single force/torque panel
 
-class Feedback(wx.Frame):
+class Hubo_CanTool(wx.Frame):
 	def __init__(self, *args, **kwargs):
 		wx.Frame.__init__(self, *args, **kwargs)
 		self.CreateStatusBar() # put status bar at bottom of window
@@ -45,19 +45,30 @@ class Feedback(wx.Frame):
 
 		# Create main sizer and add all panels to it
 		self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-		self.mainSizer.Add(self.jointsPanel, 0, border=5)
+		self.mainSizer.Add(self.jointsPanel, 0, wx.CENTER, border=5)
 		self.mainSizer.Add(wx.StaticLine(mainPanel,), 0, wx.ALL|wx.EXPAND, 3)
 		self.mainSizer.Add(self.motorPanel, 0, border=5)
 		self.mainSizer.Add(wx.StaticLine(mainPanel,), 0, wx.ALL|wx.EXPAND, 3)
 		mainPanel.SetSizerAndFit(self.mainSizer)
 		self.Show()
 
+
+		self.errorImage = wx.Image('error-icon.png', wx.BITMAP_TYPE_ANY, -1)
+		self.errorImage = wx.BitmapFromImage(self.errorImage.Scale(20,20, quality=(wx.IMAGE_QUALITY_HIGH)))
+		self.emptyImage = wx.EmptyBitmap(0,0)
+		
+
 	# A message dialog box with an OK button
 	def OnAbout(self, event):
-		dlg = wx.MessageDialog(self, "Feedback\n1.0\n\nA program to display feedback for all of Hubo's sensors and motors.", "About Feedback", wx.OK) # create MessageDialog widget with (Text to be displayed, frame title, Id) parameters. wx.OK is standard ID in wxWidgets
+		self.motorPanel.errorsPanel.bigInputFlag.SetBitmap(self.errorImage)
+		self.motorPanel.errorsPanel.encoderFlag.SetBitmap(self.errorImage)
+		self.motorPanel.boardNumValue.SetValue('36')
+		self.motorPanel.boardChanValue.SetValue('2')
+		self.motorPanel.jointValue.SetValue('WST')
+		dlg = wx.MessageDialog(self, "Hubo CAN Tool\n1.0\n\nA CAN Tool program to interact with and configure all of Hubo's joint motor controllers (JMC). This tool communicates over Hubo's CAN (Controller Area Network) channels.", "About Hubo CAN Tool", wx.OK) # create MessageDialog widget with (Text to be displayed, frame title, Id) parameters. wx.OK is standard ID in wxWidgets
 		dlg.ShowModal() # display dialog box
 		dlg.Destroy() # destory it when finished
-		self.motorPanel.ctrlPanel.hBridgeButton.SetValue(True)
+
 	# Close the program with "Exit" is selected from the File menu
 	def OnExit(self, event):
 		self.Close(True) # close the frame
@@ -76,6 +87,7 @@ class Feedback(wx.Frame):
 
 if __name__ == '__main__':
 	app = wx.App(False) # create a new app. False means don't redirect stdout/stderr to new window
-	frame = Feedback(None, wx.ID_ANY, title='Feedback', size=(665, 600)) # frame constructor. Frame(parent, Id, title)
+	frame = Hubo_CanTool(None, wx.ID_ANY, title='Hubo CAN Tool') # frame constructor. Frame(parent, Id, title)
+	frame.Fit()
 	frame.Show() # show frame
 	app.MainLoop() # start app's main loop, handling events
