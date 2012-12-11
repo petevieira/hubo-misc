@@ -82,12 +82,13 @@ class Hubo_CanTool(wx.Frame):
 			wx.TheClipboard.Flush()
 		else:
 			wx.MessageBox("Unable to open clipboard", "Error")
-		wx.TheClipboard.Close()
+			wx.TheClipboard.Close()
 
+	
 
 if __name__ == '__main__':
 	app = wx.App(False) # create a new app. False means don't redirect stdout/stderr to new window
-	frame = Hubo_CanTool(None, wx.ID_ANY, title='Hubo CAN Tool') # frame constructor. Frame(parent, Id, title)
+	frame = Hubo_CanTool(None, wx.ID_ANY, pos=wx.Point(0,0), title='Hubo CAN Tool') # frame constructor. Frame(parent, Id, title)
 	frame.Fit()
 	frame.Show() # show frame
 	app.MainLoop() # start app's main loop, handling events
