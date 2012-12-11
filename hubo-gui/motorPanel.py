@@ -93,9 +93,9 @@ class Commands_Panel(wx.Panel):
 		self.SetSizer(mainSizer)
 
 	def OnSettings(self, event):
-		settingsFrame = settings.Settings_Frame(None, wx.ID_ANY, 'Settings')
-		settingsFrame.Fit()
-		settingsFrame.Show()
+		self.settingsFrame = settings.Settings_Frame(None, wx.ID_ANY, 'Settings', size=wx.Size(600,600))
+	#	self.settingsFrame.Fit()
+		self.settingsFrame.Show()
 
 
 class Control_Panel(wx.Panel):
@@ -115,14 +115,19 @@ class Control_Panel(wx.Panel):
 		self.refInputSpinCtrl = wx.SpinCtrl(self, wx.ID_ANY, '', size=wx.Size(spinCtrlWidth, widgetHeight))
 		# h-brdige setting widgets
 		hBridgeLabel = wx.StaticText(self, wx.ID_ANY, '                H-Bridge:')
-		self.hBridgeButton = wx.ToggleButton(self, wx.ID_ANY, 'ON/OFF', size=wx.Size(toggleButtonWidth, widgetHeight))
+		self.hBridgeButton = wx.ToggleButton(self, wx.ID_ANY, 'OFF', size=wx.Size(toggleButtonWidth, widgetHeight))
 		# servo feedback widgets
 		servoFbkLabel = wx.StaticText(self, wx.ID_ANY, 'Servo Feedback:')
-		self.servoFbkButton = wx.ToggleButton(self, wx.ID_ANY, 'ON/OFF', size=wx.Size(toggleButtonWidth, widgetHeight))
+		self.servoFbkButton = wx.ToggleButton(self, wx.ID_ANY, 'OFF', size=wx.Size(toggleButtonWidth, widgetHeight))
 		# rotate motor widgets
 		rotateLabel = wx.StaticText(self, wx.ID_ANY, '     Rotate Motor:')
 		self.rotateLeftButton = wx.Button(self, wx.ID_ANY, '<', size=wx.Size(toggleButtonWidth/2, widgetHeight))
 		self.rotateRightButton = wx.Button(self, wx.ID_ANY, '>', size=wx.Size(toggleButtonWidth/2, widgetHeight))
+
+
+		self.Bind(wx.EVT_TOGGLEBUTTON, self.OnToggle, self.hBridgeButton)
+		self.Bind(wx.EVT_TOGGLEBUTTON, self.OnToggle, self.servoFbkButton)
+
 
 		# Create sizers
 		#
@@ -172,6 +177,15 @@ class Control_Panel(wx.Panel):
 	
 		# Set sizer for panel
 		self.SetSizer(self.mainSizer)
+
+	def OnToggle(self, event):
+		object =  event.GetEventObject()
+	
+		if object.GetValue() == False:
+			object.SetLabel('OFF')
+
+		elif object.GetValue() == True:
+			object.SetLabel('ON')
 
 
 class Status_Panel(wx.Panel):
