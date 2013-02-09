@@ -36,16 +36,6 @@ int main(int argc, char **argv)
     double anklePitchVelGain = 1.0;
     double ankleRollVelGain = 0.01;
 
-    double leftPIntegral = 0.0;
-    double leftRIntegral = 0.0;
-    double rightPIntegral = 0.0;
-    double rightRIntegral = 0.0;
-    double pTiltIntegral = 0.0;
-    double rTiltIntegral = 0.0;
-
-    double springGainUp = 0.002;
-    double springGainDown = 0.0075;
-
     double compLP;
     double compLR;
     double compRP;
@@ -63,44 +53,44 @@ int main(int argc, char **argv)
         comVector = hubo.getCOM();  ///get center of mass vector for hubo
 
         standOnLeg(LEFT);   ///stand on one leg
-       
+    }       
 
-    void standOnLeg(int side)
+void standOnLeg(int side)
+{
+    std::vector<Eigen::Isometry3d> footTransf(2);   ///1 is left, 2 is right
+    std::vector<Eigen::Vector6d> legAngles(2);   ///1 is left, 2 is right
+
+    while(true)
     {
-        std::vector<Eigen::Isometry3d> footTransf(2);   ///1 is left, 2 is right
-        std::vector<Eigen::Vector6d> legAngles(2);   ///1 is left, 2 is right
+        /* Get necessary information */
+        hubo.update();  ///get latest data from ach channels
+        hubo.getLegAngles(side, qLeg(side));   ///get Left leg joint angles
+        hubo.huboLegFK(footTransf(side), qLeg(side), side); ///get transformation for 'side' foot
+        comVector = hubo.getCOM(); ///get center of mass vector for hubo
 
-        while(true)
-        {
-            /* Get necessary information */
-            hubo.update();  ///get latest data from ach channels
-            hubo.getLegAngles(side, qLeg(side));   ///get Left leg joint angles
-            hubo.huboLegFK(footTransf(side), qLeg(side), side); ///get transformation for left foot
-            comVector = hubo.getCOM(); ///get center of mass vector for hubo
+        /* Compute error between actual COM and desired location of COM */            
+        yError = footTransf(side) - comVector(1);   ///compute error between y-pos of COM and center of 'side' foot
+        xError = footTransf(side) - comVector(0);   ///compute error between x-pos of COM and x=0
 
-            /* Compute error between actual COM and desired location of COM */            
-            yError = footTransf(side) - comVector(1);   ///compute error between y-pos of COM and center of 'side' foot
-            xError = footTransf(side) - comVector(0);   ///compute error between x-pos of COM and x=0
+        /* Get moments about the ankle roll and pitch axes */
+        leftAnkleMx = hubo.getLeftFootMx();
+        leftAnkleMy = hubo.getLeftFootMy();
+        rightAnkleMx = hubo.getRightFootMx();
+        rightAnkleMy = hubo.getRightFootMy();
 
-            /* Compute ankle joint velocities using resistant and compliant terms */
-            velLAP = (anklePitchVelGain * xError) - compGainAnklePitch*compLP;
-            velLAR = (ankleRollVelGain * yError) - compGainAnkleRoll*compLR;
-            velRAP = (anklePitchVelGain * xError) - compGainAnklePitch*compRP;
-            velRAR = (ankleRollVelGain * yError) - compGainAnkleRoll*compLR;
+        /* Compute ankle joint velocities using resistant and compliant terms */
+        velLAP = (anklePitchVelGain * xError) - compGainAnklePitch*leftAnkleMy;
+        velLAR = (ankleRollVelGain * yError) - compGainAnkleRoll*leftAnkleMx;
+        velRAP = (anklePitchVelGain * xError) - compGainAnklePitch*rightAnkleMy;
+        velRAR = (ankleRollVelGain * yError) - compGainAnkleRoll*rightAnkleMx;
 
-            /* Compute hip joint velocities */
-            velLHR = velLAR;    ///set LHR velocity equal to LAR velocity
-            velRHR = velRAR;    ///set RHR velocity equal to RAR velocity
+        /* Compute hip joint velocities */
+        velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
+        velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
 
-            hubo.setJointVelocity( RKN, knee );
-            hubo.setJointVelocity( RHP, RHPVel );
-            hubo.setJointVelocity( LKN, knee );
-            hubo.setJointVelocity( LHP, LHPVel );
-     
-            hubo.setJointVelocity( RAP, rightP );
-            hubo.setJointVelocity( RAR, rightR );
-            hubo.setJointVelocity( LAP, leftP );
-            hubo.setJointVelocity( LAR, leftR );
+        /* Send commands to control-daemon */
+        hubo.sendControls();
+}
 
 
 
