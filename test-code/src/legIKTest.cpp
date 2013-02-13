@@ -1,3 +1,7 @@
+/* Description: This is a squatting program to test the leg foward and inverse
+ * kinematics. It uses 'sudo service tech start' instead of 'hubo-ach start'
+*/
+
 #include <Hubo_Tech.h>
 #include <iostream>
 
@@ -25,9 +29,9 @@ int main(int argc, char **argv)
     Vector6d leftLegError, rightLegError;
     Eigen::Isometry3d leftFootTransform, rightFootTransform;
     std::string command = "";
-    int i=0, imax=20;
+    int i=0, imax=40;
     double heightDecrease = 0.1;
-    double legVelKp = 0.01;
+    double legVelKp = 0.1;
 
     /*Process:
         1. Get leg joint angles
