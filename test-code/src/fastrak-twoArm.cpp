@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 
     // Local Variables 
     Vector6d rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr, armNomAcc;
-    Vector6d lActualAngles, lArmAnglesNext, lArmAnglesCurrent, rArmAnglesCurrent, checkl;
+    Vector6d lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
     Vector3d lArmTrans, ltransEE, lArmCurrent, lArmFastrak;
     Vector3d rArmTrans, rtransEE, rArmCurrent, rArmFastrak; 
     Vector3d waistTrans, waistCurrent, waistFastrak;
@@ -26,6 +26,7 @@ int main(int argc, char **argv)
     double angle, waistPos, ptime, waistVel;
     double waistGain = 0.8;
     int i=0, imax=4;
+    double dt;
 
     // Define arm nominal acceleration 
     armNomAcc << 0.3, 0.3, 0.3, 0.3, 0.3, 0.3;
@@ -128,9 +129,9 @@ int main(int argc, char **argv)
             hubo.huboArmIK( rArmAnglesNext, rTransf, rArmAnglesCurrent, RIGHT );
     //        angle = 90.0*M_PI/180.0;
 
-            waistVel = atan2(waistRot(1,0),waistRot(0,0));
+//            waistVel = atan2(waistRot(1,0),waistRot(0,0));
 
-            hubo.setJointAngle(WST, waistVel*waistGain);
+//            hubo.setJointAngle(WST, waistVel*waistGain);
 
     //    	B(0,0) = 1; B(0,1) = 0; B(0,2) = 0; B(0,3) = ltransEE(0);
     //        B(1,0) = 0; B(1,1) = cos(angle); B(1,2) = -sin(angle); B(1,3) = ltransEE(1);
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
     //    	hubo.huboArmIK( rArmAnglesNext, B, rArmAnglesCurrent, RIGHT );
 
             // set joint angles
-            hubo.setLeftArmAngles( lArmAnglesNext, false );
+//            hubo.setLeftArmAngles( lArmAnglesNext, false );
             hubo.setRightArmAngles( rArmAnglesNext, false );
             hubo.getLeftArmAngles( lActualAngles);
             hubo.getRightArmAngles( rActualAngles);
