@@ -1,16 +1,24 @@
-#include "hubo_plus.h"
+#include <Hubo_Tech.h>
+#include <hubo.h>
 #include <iostream>
 
  
 int main(int argc, char **argv)
 {
-    hubo_plus hubo;
+    Hubo_Tech hubo;
     int i=0, imax=20;
+
+    ach_channel_t chan_hubo_state;
+    struct hubo_state H_state;
+    memset( &H_state, 0, sizeof(H_state) );
+
+    // open hubo state
+    int r = ach_open(&chan_hubo_state, HUBO_CHAN_STATE_NAME, NULL);
 
     double ptime, dt;
     double initialTime = hubo.getTime();
     ptime = hubo.getTime();
-
+    size_t fs;
     while(true)
     {
         hubo.update();
@@ -21,10 +29,14 @@ int main(int argc, char **argv)
         {
             i++; if(i>imax) i=0;
 
-            if( i==imax )
-//                std::cout << "Weight:" << hubo.getLeftFootFz() + hubo.getRightFootFz()  <<  "\tLP:" << leftP << "\tRP:" << rightP << "\tLR:" << leftR << "\tRR:" << rightR << std::endl;
-                std::cout << "\tWeight:" << hubo.getLeftFootFz() + hubo.getRightFootFz() << "\tLHP Angle:" << hubo.getJointAngle(LHP) << "\tRHP Angle:" << hubo.getJointAngle(RHP) << "\tHipErr: " << hubo.getJointAngle(LHP)-hubo.getJointAngle(RHP) <<  "\tLKN Angle: " << hubo.getJointAngle(LKN) << "\tRKN Angle: " << hubo.getJointAngle(RKN) << "\tKneeErr: " << hubo.getJointAngle(LKN)-hubo.getJointAngle(RKN) << "\tMx: " << hubo.getMx(HUBO_FT_R_FOOT) << "\tMy: " << hubo.getMy(HUBO_FT_R_FOOT) << "\tIMUx: " << hubo.getAngleX() << "\tIMUy: " << hubo.getAngleY() << std::endl;
+            r = ach_get( &chan_hubo_state, &H_state, sizeof(H_state), &fs, NULL, ACH_O_LAST );
 
+            if( i==imax )
+            {
+                std::cout << "REB Angle Ref (rad): " << hubo.getJointAngle(REB) 
+                          << "\tREB Angle State (rad): " << H_state.joint[REB].pos
+                          << std::endl;
+            }
         }
         
         ptime = hubo.getTime();
