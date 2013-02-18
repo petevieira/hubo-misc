@@ -26,8 +26,8 @@ int main(int argc, char **argv)
     hubo.setJointNominalAcceleration( RAR, 0.6 );
 
     // Set Legs to Velocity Control
-    hubo.setLegVelCtrl(LEFT);
-    hubo.setLegVelCtrl(RIGHT);
+//    hubo.setLegVelCtrl(LEFT);
+    hubo.setLegPosCtrl(RIGHT);
 
     // Local Variables
     Vector6d currentLeftLegAngles, currentRightLegAngles;
@@ -56,16 +56,27 @@ int main(int argc, char **argv)
 
     // Get joints angles for the legs
     hubo.getLegAngles(RIGHT, currentRightLegAngles);
+    hubo.getLegAngles(LEFT, currentLeftLegAngles);
 
     // Get feet locations
     hubo.huboLegFK(rightFootTransform, currentRightLegAngles, RIGHT);
+    hubo.huboLegFK(leftFootTransform, currentLeftLegAngles, LEFT);
+    std::cout << "initial pose: \n" << rightFootTransform.matrix() << std::endl;
+    std::cout << "initial pose: \n" << leftFootTransform.matrix() << std::endl;
 
     // Adjust height (z-value)
     rightFootTransform(2,3) += heightDecrease;
+    leftFootTransform(2,3) += heightDecrease;
 
     // Get new leg joint angles
     hubo.huboLegIK(refRightLegAngles, rightFootTransform, currentRightLegAngles, RIGHT);
+    hubo.huboLegIK(refLeftLegAngles, leftFootTransform, currentLeftLegAngles, LEFT);
 
+    // Set joint angles
+    hubo.setLegAngles(RIGHT, refRightLegAngles, true);
+    hubo.setLegAngles(LEFT, refLeftLegAngles, true);
+
+/*
     // Main while loop
     while(true)
     {
@@ -99,13 +110,15 @@ int main(int argc, char **argv)
             // Display IMU readings
             if( i==imax )
             {
-                std::cout
+*/                std::cout
                         << "Right Leg Angles: " << currentRightLegAngles.transpose()
-                        << "\nRight Leg Ref Vels: " << refRightLegAngles.transpose()
-                        << "\n\nRight Leg Error: " << rightLegError.transpose()
-                        << "\n\nFoot Height: " << rightFootTransform(2,3)
+                        << "Left Leg Angles: " << currentRightLegAngles.transpose()
+                        << "\nRefR Pose: \n" << rightFootTransform.matrix()
+                        << "\nRefL Pose: \n" << rightFootTransform.matrix()
+                        << "\nRefR angles: " << refRightLegAngles.transpose()
+                        << "\nRefL angles: " << refRightLegAngles.transpose()
                         << std::endl;
-            }
-        }
-    }
+//            }
+//        }
+//    }
 }
