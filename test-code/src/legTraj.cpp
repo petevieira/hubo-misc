@@ -4,6 +4,6 @@ int main(int argc, char **argv)
 {
     Hubo_Tech hubo;
 
-    hubo.setJointAngle(REB, -.5);
+    hubo.setJointAngle(RKN, .5);
     hubo.sendControls();
 }
