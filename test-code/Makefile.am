@@ -5,7 +5,7 @@ fastrak_balance_CPPFLAGS = -I./include -g -I/usr/include/eigen3 -I/usr/local/inc
 techlibs = -lm -lach -lc -lhubotech -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = fastrak-balance fastrak-dremelIK fastrak-twoArm legIKTest sensors
+bin_PROGRAMS = fastrak-balance fastrak-dremelIK fastrak-twoArm legIKTest legTraj sensors
 
 include_HEADERS = include/Fastrak.h
 
@@ -20,6 +20,9 @@ fastrak_twoArm_LDADD = $(techlibs) libfastrak.la
 
 legIKTest_SOURCES = src/legIKTest.cpp
 legIKTest_LDADD = $(techlibs)
+
+legTraj_SOURCES = src/legTraj.cpp
+legTraj_LDADD = $(techlibs)
 
 sensors_SOURCES = src/sensors.cpp
 sensors_LDADD = $(techlibs)
