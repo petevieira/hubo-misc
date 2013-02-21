@@ -150,12 +150,12 @@ int main(int argc, char **argv)
             if( i>=imax )
             {
                 i = 0;
-                std::cout << "Fastraktl: " << lLegTrans.transpose()
+/*                std::cout << "Fastraktl: " << lLegTrans.transpose()
                           << "\nFastraktr: " << rLegTrans.transpose()
                           << "\nLEFTqd: " << lLegAnglesNext.transpose()
                           << "\nRIGTqd: " << rLegAnglesNext.transpose()
                           << std::endl;
-            }
+*/            }
         }
     }
 }
