@@ -39,9 +39,8 @@ int main(int argc, char **argv)
     hubo.sendControls();
 
     // Get initial Fastrak sensors location and orientation
-    fastrak.getPose( lArmCurrent, lRotInitial, 1, true );
-    fastrak.getPose( rArmCurrent, rRotInitial, 2, false );
-    fastrak.getPose( waistCurrent, waistRotCurrent, 3, false );
+    fastrak.getPose( lArmCurrent, lRotInitial, 3, true );
+    fastrak.getPose( rArmCurrent, rRotInitial, 4, false );
 
     // Define starting joint angles for the arms 
     lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0;
@@ -89,9 +88,8 @@ int main(int argc, char **argv)
             hubo.huboArmFK(rHandCurrent, rArmAnglesCurrent, RIGHT);    
 
             // get Fastrak data for left and right sensors
-            fastrak.getPose( lArmFastrak, lRot, 1, true );
-            fastrak.getPose( rArmFastrak, rRot, 2, false );
-            fastrak.getPose( waistFastrak, waistRot, 3, false );
+            fastrak.getPose( lArmFastrak, lRot, 3, true );
+            fastrak.getPose( rArmFastrak, rRot, 4, false );
 
             // extract z-rotation angle from waistRot
     //        waistZRot = waistRot.eulerAngles(
@@ -144,7 +142,7 @@ int main(int argc, char **argv)
     //    	hubo.huboArmIK( rArmAnglesNext, B, rArmAnglesCurrent, RIGHT );
 
             // set joint angles
-//            hubo.setLeftArmAngles( lArmAnglesNext, false );
+            hubo.setLeftArmAngles( lArmAnglesNext, false );
             hubo.setRightArmAngles( rArmAnglesNext, false );
             hubo.getLeftArmAngles( lActualAngles);
             hubo.getRightArmAngles( rActualAngles);
@@ -155,7 +153,7 @@ int main(int argc, char **argv)
             hubo.sendControls();
             if( i==imax )
             {
-                std::cout << "\033[2J"
+/*                std::cout << "\033[2J"
                           << "Fastraktl: \n" << lArmTrans
                           << "\nFastrakl: \n" << lRot
                           << "Fastraktr: \n" << rArmTrans
@@ -169,7 +167,7 @@ int main(int argc, char **argv)
                           << "\nLeft hand torques: " << hubo.getLeftHandMx() << ", " << hubo.getLeftHandMy()
                           << std::endl;
                           i = 0;
-            }
+*/            }
         }
     }
 }
