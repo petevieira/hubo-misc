@@ -3,6 +3,8 @@
 #include <fstream>
 #include "Fastrak.h"
 
+#define FOOT_WIDTH = .130 // Width of Hubo's foot in meters
+
 int main(int argc, char **argv)
 {
     // LOCAL VARIABLES
@@ -126,6 +128,12 @@ int main(int argc, char **argv)
             // pretranslate by the relative fastrak translation
             lTransf.translate(lLegTrans + lFootInitialPos);
             rTransf.translate(rLegTrans + rFootInitialPos);
+
+            // make sure feet don't cross sagittal plane
+            if(lTransf(1,3) - FOOT_WIDTH/2 < 0)
+                lTransf(1,3) = FOOT_WIDTH/2;
+            if(rTransf(1,3) + FOOT_WIDTH/2 > 0)
+                rTransf(1,3) = -FOOT_WIDTH/2;
 
             // add rotation matrix to top-left corner
             lTransf.rotate(lRot);
