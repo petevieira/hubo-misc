@@ -1,21 +1,22 @@
 #include <Hubo_Tech.h>
 
-void balance();
+void balance(Hubo_Tech hubo);
 void shiftToSide(int side);
 void shiftToSide2(int side);
 
 int main(int argc, char **argv)
 {
-    balance();
+    // Create Hubo_Tech object
+    Hubo_Tech hubo;
+    hubo.loadURDFModel("/home/rapierevite/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
+
+    balance(hubo);
 //    shiftToSide(right);
 //    shiftToSide2(RIGHT);
 }
 
-void balance()
+void balance(Hubo_Tech hubo)
 {
-    // Create Hubo_Tech object
-    Hubo_Tech hubo;
-
     // LOCAL VARIABLES
     Eigen::Vector3d pCOM;
     double velLAP, velLAR, velLHR;
