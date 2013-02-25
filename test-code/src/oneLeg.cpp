@@ -1,4 +1,4 @@
-#include "Hubo_Tech.h"
+#include <Hubo_Tech.h>
 
 void balance();
 void shiftToSide(int side);
@@ -6,11 +6,11 @@ void shiftToSide2(int side);
 
 int main(int argc, char **argv)
 {
-//    balance();
+    balance();
 //    shiftToSide(right);
-    shiftToSide2(RIGHT);
+//    shiftToSide2(RIGHT);
 }
-/*
+
 void balance()
 {
     // Create Hubo_Tech object
@@ -22,7 +22,7 @@ void balance()
     double velRAP, velRAR, velRHR;
     double compGainAnkleRoll = 0.001;
     double compGainAnklePitch = 0.001;
-    double KpCOM = 0.01;
+    double KpCOM = 0.001;
     double dt, prevTime = hubo.getTime();
     double i, imax=50;
 
@@ -40,7 +40,7 @@ void balance()
             i++; // increment i
 
             // get center of mass vector for Hubo
-            pCOM = hubo.getCOM();
+            pCOM = hubo.getCOM_FullBody();
 
             // Compute ankle joint velocities using resistant(against COM) 
             // and compliant(with ankle moments) terms
@@ -103,7 +103,7 @@ void shiftToSide(int side)
             hubo.getLegAngles(LEFT, ltLegAnglesPrev);   ///get Left leg joint angles
             hubo.huboLegFK(rtFootTF, rtLegAnglesPrev, RIGHT); ///get transformation for 'legSide' foot
             hubo.huboLegFK(ltFootTF, ltLegAnglesPrev, LEFT); ///get transformation for 'legSide' foot
-            pCOM = hubo.getCOM(); ///get center of mass vector for hubo
+            pCOM = hubo.getCOM_FullBody(); ///get center of mass vector for hubo
 
             if(side == LEFT) // lean left (ie, move feet right)
             {
@@ -136,7 +136,7 @@ void shiftToSide(int side)
         }
     }
 }
-*/
+
 void shiftToSide2(int side)
 {
     // Create Hubo_Tech object
