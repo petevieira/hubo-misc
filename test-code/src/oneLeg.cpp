@@ -1,176 +1,218 @@
-#include <Hubo_Tech.h>
+#include "Hubo_Tech.h"
 
-void standOnLeg(int legSide);
- 
+void balance();
+void shiftToSide(int side);
+void shiftToSide2(int side);
+
 int main(int argc, char **argv)
 {
-    Hubo_Tech hubo;
-    int i=0, imax=20;
-
-    hubo.setJointNominalAcceleration( LAR, 0.6 );
-    hubo.setJointNominalAcceleration( LAP, 0.6 );
-    hubo.setJointNominalAcceleration( RAP, 0.6 );
-    hubo.setJointNominalAcceleration( RAR, 0.6 );
-
-    hubo.setJointNominalAcceleration( RKN, 0.6 );
-    hubo.setJointNominalAcceleration( RHP, 0.6 );
-    hubo.setJointNominalAcceleration( LKN, 0.6 );
-    hubo.setJointNominalAcceleration( LHP, 0.6 );
-
-    enum legSide { LEFT, RIGHT };
-    struct kneeAngle {
-        double left;
-        double right;
-    };
-
-
-    double height;
-    double angle;
-    double leftP=0, leftR=0, rightP=0, rightR=0, ptime, dt, knee, LHPVel, RHPVel, weight,
-            imuAngleXZero, LHRVel, RHRVel;
-    std::string command = "";
-    std::string leg = "";
-    double initialTime = hubo.getTime();
-    ptime = hubo.getTime();
-    double atime = hubo.getTime();
-
-    while(true)
-    {
-        hubo.update();  ///get latest data from ach channels
-
-        standOnLeg(LEFT);   ///stand on one leg
-    }       
-
+//    balance();
+//    shiftToSide(right);
+    shiftToSide2(RIGHT);
 }
-
-void standOnLeg(int legSide)
+/*
+void balance()
 {
-    std::vector<Eigen::Isometry3d> footTransf(2);   ///1 is left, 2 is right
-    std::vector<Vector6d> legAngles(2);   ///1 is left, 2 is right
+    // Create Hubo_Tech object
+    Hubo_Tech hubo;
 
-    double xError, yError;
-    double leftAnkleMx, leftAnkleMy, rightAnkleMx, rightAnkleMy;
-    double velLAP, velLAR, velRAP, velRAR, velLHR, velRHR;
+    // LOCAL VARIABLES
+    Eigen::Vector3d pCOM;
+    double velLAP, velLAR, velLHR;
+    double velRAP, velRAR, velRHR;
     double compGainAnkleRoll = 0.001;
     double compGainAnklePitch = 0.001;
-    double anklePitchVelGain = 1.0;
-    double ankleRollVelGain = 0.01;
+    double KpCOM = 0.01;
+    double dt, prevTime = hubo.getTime();
+    double i, imax=50;
 
-    struct comVector {
-        double x;
-        double y;
-        double z;
-    };
-
-    while(true)
+    while(!daemon_sig_quit)
     {
-        Hubo_Tech hubo;
-
-        /* Get necessary information */
+        // Get necessary information
         hubo.update();  ///get latest data from ach channels
-        hubo.getLegAngles(legSide, legAngles(legSide));   ///get Left leg joint angles
-        hubo.huboLegFK(footTransf(legSide), legAngles(legSide), legSide); ///get transformation for 'legSide' foot
-        comVector = hubo.getCOM(); ///get center of mass vector for hubo
+        // check if new information was received
+        dt = hubo.getTime() - prevTime;
+        prevTime = hubo.getTime();
 
-        /* Compute error between actual COM and desired location of COM */            
-        yError = footTransf(legSide) - comVector.y;   ///compute error between y-pos of COM and center of 'legSide' foot
-        xError = footTransf(legSide) - comVector.x;   ///compute error between x-pos of COM and x=0
+        // if new information received
+        if(dt > 0)
+        {
+            i++; // increment i
 
-        /* Get moments about the ankle roll and pitch axes */
-        leftAnkleMx = hubo.getLeftFootMx();
-        leftAnkleMy = hubo.getLeftFootMy();
-        rightAnkleMx = hubo.getRightFootMx();
-        rightAnkleMy = hubo.getRightFootMy();
+            // get center of mass vector for Hubo
+            pCOM = hubo.getCOM();
 
-        /* Compute ankle joint velocities using resistant and compliant terms */
-        velLAP = (anklePitchVelGain * xError) - compGainAnklePitch*leftAnkleMy;
-        velLAR = (ankleRollVelGain * yError) - compGainAnkleRoll*leftAnkleMx;
-        velRAP = (anklePitchVelGain * xError) - compGainAnklePitch*rightAnkleMy;
-        velRAR = (ankleRollVelGain * yError) - compGainAnkleRoll*rightAnkleMx;
+            // Compute ankle joint velocities using resistant(against COM) 
+            // and compliant(with ankle moments) terms
+            velLAP = (KpCOM * pCOM(0)) - compGainAnklePitch*hubo.getLeftFootMy();
+            velLAR = -(KpCOM * pCOM(1)) - compGainAnkleRoll*hubo.getLeftFootMx();
+            velRAP = (KpCOM * pCOM(0)) - compGainAnklePitch*hubo.getRightFootMy();
+            velRAR = -(KpCOM * pCOM(1)) - compGainAnkleRoll*hubo.getRightFootMx();
 
-        /* Compute hip joint velocities */
-        velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
-        velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
+            // Compute hip joint velocities
+            velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
+            velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
 
-        /* Send commands to control-daemon */
-        hubo.sendControls();
+            // Send commands to control-daemon
+            hubo.sendControls();
+            
+            // Print out data
+            if(i >= imax)
+            {
+                std::cout
+                    << "COM: " << pCOM.transpose() 
+                << std::endl;
+                i = 0;
+            }
+        }
     }
 }
 
+void shiftToSide(int side)
+{
+    // Create Hubo_Tech object
+    Hubo_Tech hubo;
 
+    // LOCAL VARIABLES
+    Eigen::Vector3d pCOM;
+    Eigen::Isometry3d ltFootTF, rtFootTF;
+    Vector6d ltLegAngles, rtLegAngles, ltLegAnglesPrev, rtLegAnglesPrev;
+    double velLAP, velLAR, velLHR;
+    double velRAP, velRAR, velRHR;
+    double compGainAnkleRoll = 0.001;
+    double compGainAnklePitch = 0.001;
+    double KpCOM = 0.1;
+    double dt, prevTime = hubo.getTime();
+    double i, imax=50;
 
-
-
-
-
-
-
-
-
-
-
-/*
-
-        dt = hubo.getTime() - ptime;
-        atime += dt;
-        
-        if( dt > 0 )
-        {
-            i++; if(i>imax) i=0;
-
-            compLP = hubo.getLeftFootMy();
-            compLR = hubo.getLeftFootMx();
-            compRP = hubo.getRightFootMy();
-            compRR = hubo.getRightFootMx();
-
-	    knee = 0;
-            LHPVel = -knee/2.0;
-            RHPVel = -knee/2.0;
- 
-//            if(atime - initialTime > 10)
-//            {
-//                imuAngleXZero = 0.1478;
-//                command = "lean";
-//            }
-
-//            hubo.setJointVelocity( RHR, RHRVel );
-//            hubo.setJointVelocity( LHR, LHRVel );
-
-            hubo.sendControls();
- 
-            // Display IMU readings
-            if( i==imax )
-//                std::cout << "Weight:" << hubo.getLeftFootFz() + hubo.getRightFootFz()  <<  "\tLP:" << leftP << "\tRP:" << rightP << "\tLR:" << leftR << "\tRR:" << rightR << std::endl;
-		        std::cout << "Command: " << command << "\tWeight:" << hubo.getLeftFootFz() + hubo.getRightFootFz() << "\tLHP Angle:" << hubo.getJointAngle(LHP) << "\tRHP Angle:" << hubo.getJointAngle(RHP) << "\tHipErr: " << hubo.getJointAngle(LHP)-hubo.getJointAngle(RHP) <<  "\tLKN Angle: " << hubo.getJointAngle(LKN) << "\tRKN Angle: " << hubo.getJointAngle(RKN) << "\tKneeErr: " << hubo.getJointAngle(LKN)-hubo.getJointAngle(RKN) << "\tMx: " << hubo.getMx(HUBO_FT_R_FOOT) << "\tMy: " << hubo.getMy(HUBO_FT_R_FOOT) << "\tIMUx: " << hubo.getAngleX() << "\tIMUy: " << hubo.getAngleY() << std::endl;
-
-//                std::cout << "IMU:" << "\tAngleX:" << hubo.getAngleX() << "\tAngleY:" << hubo.getAngleY()
-//                        << "\tRotVelX:" << hubo.getRotVelX() << "\tRotVelY:" << hubo.getRotVelY()
-//                        << std::endl;
-
-            // Display feet inclinometer readings
-            if( i==imax )
-                std::cout << "LAccX:" << hubo.getLeftAccX() << "\tLAccY:" << hubo.getLeftAccY()
-                        << "\tLAccZ:" << hubo.getLeftAccZ()-9.8
-                        << "\tRAccX:" << hubo.getRightAccX() << "\tRAccY:" << hubo.getRightAccY()
-                        << "\tRAccZ:" << hubo.getRightAccZ()-9.8 << std::endl;
-*///                std::cout << "RAP:" << rightP << "\t" << "RAR:" << rightR << "\t"
-//                    <<   "LAP:" << leftP  << "\t" << "LAR:" << leftR << std::endl;
-//        }
-        
-//        ptime = hubo.getTime();
-//    }
-
-/*    int bendLeg(std::string leg, double height)
+    while(!daemon_sig_quit)
     {
-        angle = acos(height/(2*(l1 + l2)))*2;
+        // get latest data from ach channels if any new info
+        hubo.update();
+        // check if new information was received
+        dt = hubo.getTime() - prevTime;
+        prevTime = hubo.getTime();
 
-        if (angle >= 1.0)
-            return -1;
-        if(leg == "both" || leg = "Both") {
-            kneeAngle.left = kneeAngle.right = angle;
-        } else if (leg == "left") {
-            kneeAngle.left = angle;
-        } else if (leg == "right") {
-            kneeAngle.right = angle;
+        // if new information received
+        if(dt > 0)
+        {
+            i++; // increment i
+
+            // Get necessary information
+            hubo.getLegAngles(RIGHT, rtLegAnglesPrev);   ///get Left leg joint angles
+            hubo.getLegAngles(LEFT, ltLegAnglesPrev);   ///get Left leg joint angles
+            hubo.huboLegFK(rtFootTF, rtLegAnglesPrev, RIGHT); ///get transformation for 'legSide' foot
+            hubo.huboLegFK(ltFootTF, ltLegAnglesPrev, LEFT); ///get transformation for 'legSide' foot
+            pCOM = hubo.getCOM(); ///get center of mass vector for hubo
+
+            if(side == LEFT) // lean left (ie, move feet right)
+            {
+                rtFootTF(1,3) += pCOM(1);
+                ltFootTF(1,3) = pCOM(1) - ltFootTF(1,3);
+            }
+            else if(side == RIGHT) // lean right (ie, move feet left)
+            {
+                rtFootTF(1,3) = pCOM(1) - rtFootTF(1,3);
+                ltFootTF(1,3) += pCOM(0);
+            }
+            else
+                std::cout << "You didn't use a valid 'side' argument. Valid arguments are LEFT or RIGHT\n";
+
+            hubo.huboLegIK(rtLegAngles, rtFootTF, rtLegAnglesPrev, RIGHT);
+            hubo.huboLegIK(ltLegAngles, ltFootTF, ltLegAnglesPrev, LEFT);
+
+            // Compute ankle joint velocities using resistant and compliant terms
+            velLAP = (KpCOM * pCOM(0)) - compGainAnklePitch * hubo.getLeftFootMy();
+            velLAR = (KpCOM * (ltLegAngles(5) - ltLegAnglesPrev(5))) - compGainAnkleRoll * hubo.getLeftFootMx();
+            velRAP = (KpCOM * pCOM(0)) - compGainAnklePitch * hubo.getRightFootMy();
+            velRAR = (KpCOM * (rtLegAngles(5) - rtLegAnglesPrev(5))) - compGainAnkleRoll * hubo.getRightFootMx();
+
+            // Compute hip joint velocities
+            velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
+            velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
+
+            // Send commands to control-daemon
+            hubo.sendControls();
         }
-    }*/
+    }
+}
+*/
+void shiftToSide2(int side)
+{
+    // Create Hubo_Tech object
+    Hubo_Tech hubo;
+
+    // LOCAL VARIABLES
+    Eigen::Vector3d pCOM;
+    Eigen::Isometry3d ltFootTF, rtFootTF;
+    Vector6d ltLegAngles, rtLegAngles, ltLegAnglesPrev, rtLegAnglesPrev;
+    double velLAP, velLAR, velLHR;
+    double velRAP, velRAR, velRHR;
+    double compGainAnkleRoll = 0.001;
+    double compGainAnklePitch = 0.001;
+    double KpCOM = 0.1;
+    double dt, prevTime = hubo.getTime();
+    double i, imax=50;
+
+    while(!daemon_sig_quit)
+    {
+        // get latest data from ach channels if any new info
+        hubo.update();
+        // check if new information was received
+        dt = hubo.getTime() - prevTime;
+        prevTime = hubo.getTime();
+
+        // if new information received
+        if(dt > 0)
+        {
+            i++; // increment i
+
+            // Get necessary information
+            hubo.getLegAngles(RIGHT, rtLegAnglesPrev);   ///get Left leg joint angles
+            hubo.getLegAngles(LEFT, ltLegAnglesPrev);   ///get Left leg joint angles
+            hubo.huboLegFK(rtFootTF, rtLegAnglesPrev, RIGHT); ///get transformation for 'legSide' foot
+            hubo.huboLegFK(ltFootTF, ltLegAnglesPrev, LEFT); ///get transformation for 'legSide' foot
+
+            if(side == LEFT) // lean left (ie, move feet right)
+            {
+                ltFootTF(1,3) = 0;
+                rtFootTF(1,3) -= ltFootTF(1,3);
+            }
+            else if(side == RIGHT) // lean right (ie, move feet left)
+            {
+                rtFootTF(1,3) = 0;
+                ltFootTF(1,3) += rtFootTF(1,3);
+            }
+            else
+                std::cout << "You didn't use a valid 'side' argument. Valid arguments are LEFT or RIGHT\n";
+
+            hubo.huboLegIK(rtLegAngles, rtFootTF, rtLegAnglesPrev, RIGHT);
+            hubo.huboLegIK(ltLegAngles, ltFootTF, ltLegAnglesPrev, LEFT);
+
+            // Compute ankle joint velocities using resistant and compliant terms
+            velLAP = -(KpCOM * ltFootTF(0,3)) - compGainAnklePitch * hubo.getLeftFootMy();
+            velLAR = (KpCOM * (ltLegAngles(5) - ltLegAnglesPrev(5))) - compGainAnkleRoll * hubo.getLeftFootMx();
+            velRAP = -(KpCOM * ltFootTF(0,3)) - compGainAnklePitch * hubo.getRightFootMy();
+            velRAR = (KpCOM * (rtLegAngles(5) - rtLegAnglesPrev(5))) - compGainAnkleRoll * hubo.getRightFootMx();
+
+            // Compute hip joint velocities
+            velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
+            velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
+
+            // Send commands to control-daemon
+//            hubo.sendControls();
+                // Print out data
+            if(i >= imax)
+            {
+                std::cout
+                    << "velLAP: " << velLAP
+                    << "\nvelLAR: " << velLAR 
+                    << "\nvelRAP: " << velRAP
+                    << "\nvelRAR: " << velRAR 
+                << std::endl;
+                i = 0;
+            }
+
+        }
+    }
+}
