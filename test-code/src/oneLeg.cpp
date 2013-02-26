@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 {
     // Create Hubo_Tech object
     Hubo_Tech hubo;
-    hubo.loadURDFModel("/home/rapierevite/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
+    hubo.loadURDFModel("/home/pete/Downloads/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
 
     balance(hubo);
 //    shiftToSide(right);
@@ -19,11 +19,12 @@ void balance(Hubo_Tech hubo)
 {
     // LOCAL VARIABLES
     Eigen::Vector3d pCOM;
+    Vector6d leftArmAngles;
     double velLAP, velLAR, velLHR;
     double velRAP, velRAR, velRHR;
     double compGainAnkleRoll = 0.001;
     double compGainAnklePitch = 0.001;
-    double KpCOM = 0.001;
+    double KpCOM = 1.0;
     double dt, prevTime = hubo.getTime();
     double i, imax=50;
 
@@ -45,23 +46,32 @@ void balance(Hubo_Tech hubo)
 
             // Compute ankle joint velocities using resistant(against COM) 
             // and compliant(with ankle moments) terms
-            velLAP = (KpCOM * pCOM(0)) - compGainAnklePitch*hubo.getLeftFootMy();
-            velLAR = -(KpCOM * pCOM(1)) - compGainAnkleRoll*hubo.getLeftFootMx();
-            velRAP = (KpCOM * pCOM(0)) - compGainAnklePitch*hubo.getRightFootMy();
-            velRAR = -(KpCOM * pCOM(1)) - compGainAnkleRoll*hubo.getRightFootMx();
+            velLAP = (KpCOM * pCOM(0)) + compGainAnklePitch*hubo.getLeftFootMy();
+            velLAR = -(KpCOM * pCOM(1)) + compGainAnkleRoll*hubo.getLeftFootMx();
+            velRAP = (KpCOM * pCOM(0)) + compGainAnklePitch*hubo.getRightFootMy();
+            velRAR = -(KpCOM * pCOM(1)) + compGainAnkleRoll*hubo.getRightFootMx();
 
             // Compute hip joint velocities
             velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
             velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
 
+            hubo.setJointVelocity(LAP, velLAP);
+            hubo.setJointVelocity(LAR, velLAR);
+            hubo.setJointVelocity(RAP, velRAP);
+            hubo.setJointVelocity(RAR, velRAR);
+            hubo.setJointVelocity(LHR, velLHR);
+            hubo.setJointVelocity(RHR, velRHR);
+
             // Send commands to control-daemon
             hubo.sendControls();
-            
+ 
             // Print out data
             if(i >= imax)
             {
                 std::cout
-                    << "COM: " << pCOM.transpose() 
+                    << "COM: " << pCOM.transpose()
+                    << "rAP,AR,HR: " << velLAP << ", " << velLAR << ", " << velLHR
+                    << "lAP,AR,HR: " << velRAP << ", " << velRAR << ", " << velRHR
                 << std::endl;
                 i = 0;
             }
@@ -131,6 +141,13 @@ void shiftToSide(int side)
             // Compute hip joint velocities
             velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
             velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
+
+            hubo.setJointVelocity(LAP, velLAP);
+            hubo.setJointVelocity(LAR, velLAR);
+            hubo.setJointVelocity(RAP, velRAP);
+            hubo.setJointVelocity(RAR, velRAR);
+            hubo.setJointVelocity(LHR, velLHR);
+            hubo.setJointVelocity(RHR, velRHR);
 
             // Send commands to control-daemon
             hubo.sendControls();
