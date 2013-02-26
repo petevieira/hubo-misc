@@ -3,6 +3,7 @@
 void balance(Hubo_Tech hubo);
 void shiftToSide(int side);
 void shiftToSide2(int side);
+void setDoubleSupportLimits(Hubo_Tech hubo);
 
 int main(int argc, char **argv)
 {
@@ -40,6 +41,10 @@ void balance(Hubo_Tech hubo)
         if(dt > 0)
         {
             i++; // increment i
+
+            // reset hip roll limits
+
+            setDoubleSupportLimits(hubo);
 
             // get center of mass vector for Hubo
             pCOM = hubo.getCOM_FullBody();
@@ -217,6 +222,13 @@ void shiftToSide2(int side)
             velLHR = -velLAR;    ///set LHR velocity opposite to LAR velocity
             velRHR = -velRAR;    ///set RHR velocity opposite to RAR velocity
 
+            hubo.setJointVelocity(LAP, velLAP);
+            hubo.setJointVelocity(LAR, velLAR);
+            hubo.setJointVelocity(RAP, velRAP);
+            hubo.setJointVelocity(RAR, velRAR);
+            hubo.setJointVelocity(LHR, velLHR);
+            hubo.setJointVelocity(RHR, velRHR);
+
             // Send commands to control-daemon
 //            hubo.sendControls();
                 // Print out data
@@ -233,4 +245,14 @@ void shiftToSide2(int side)
 
         }
     }
+}
+
+void setDoubleSupportLimits(Hubo_Tech hubo)
+{
+    double LHRcurrentMin = hubo.getJointAngleMin(LHR);
+    double RHRcurrentMax = hubo.getJointAngleMax(RHR);
+    double LHRAngle = hubo.getJointAngle(LHR);
+    double RHRAngle = hubo.getJointAngle(RHR);
+    hubo.setJointAngleMin(LHR, RHRAngle < LHRcurrentMin ? RHRAngle : LHRcurrentMin);
+    hubo.setJointAngleMax(RHR, LHRAngle > RHRcurrentMax ? LHRAngle : RHRcurrentMax);
 }
