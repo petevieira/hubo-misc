@@ -14,7 +14,8 @@ int main(int argc, char **argv)
 {
     // Create Hubo_Tech object
     Hubo_Tech hubo;
-    hubo.loadURDFModel("/home/rapierevite/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
+    hubo.loadURDFModel("/home/pete/Downloads/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
+    //hubo.loadURDFModel("/home/rapierevite/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
 
     balance(hubo);
 //    shiftToSide(right);
@@ -101,12 +102,13 @@ void balance(Hubo_Tech &hubo)
 {
     // LOCAL VARIABLES
     Eigen::Vector3d balPt2COM;
+    Vector6d ltLegAngles, rtLegAngles;
     Eigen::Isometry3d world2COM;
     double velLAP, velLAR, velLHR;
     double velRAP, velRAR, velRHR;
     double compGainAnkleRoll = 0.001;
     double compGainAnklePitch = 0.001;
-    double KpCOM = 0.1;
+    double KpCOM = 1;
     double dt, prevTime = hubo.getTime();
     double i, imax=50;
 
@@ -127,9 +129,11 @@ void balance(Hubo_Tech &hubo)
 
             setDoubleSupportLimits(hubo);
             // get center of mass vector for Hubo w.r.t. Neck
-            world2COM = hubo.getCOM_FullBody();
+//            world2COM = hubo.getCOM_FullBody();
+            world2COM = hubo.getCOM_wrtTorso();
 
-            balPt2COM = getBalancePt2COM(hubo, world2COM);
+//            balPt2COM = getBalancePt2COM(hubo, world2COM);
+            balPt2COM = getBalancePt2COMTorso(hubo, world2COM);
 
             // Compute ankle joint velocities using resistant(against COM) 
             // and compliant(with ankle moments) terms
@@ -152,13 +156,16 @@ void balance(Hubo_Tech &hubo)
             // Send commands to control-daemon
             hubo.sendControls();
  
+            hubo.getLegAngles(LEFT, ltLegAngles);
+            hubo.getLegAngles(RIGHT, rtLegAngles);
+
             // Print out data
             if(i >= imax)
             {
                 std::cout
                     << "COM: " << balPt2COM.transpose()
-                    << "rAP,AR,HR: " << velLAP << ", " << velLAR << ", " << velLHR
-                    << "lAP,AR,HR: " << velRAP << ", " << velRAR << ", " << velRHR
+                    << "\nltLegAngles: " << ltLegAngles.transpose()
+                    << "\nrlLegAngles: " << rtLegAngles.transpose()
                 << std::endl;
                 i = 0;
             }
