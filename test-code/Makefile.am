@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 techlibs = -lm -lach -lc -lhubotech -ldaemonizer -lrt -lhuboparams -ldartlite
 
 # List the binary files you want to generate:
-bin_PROGRAMS = dartTest #legIKTest fastrak-oneLeg #fastrak-balance fastrak-dremelIK fastrak-twoArm fastrak-oneLeg legTraj sensors
+bin_PROGRAMS = oneLeg #legIKTest fastrak-oneLeg #fastrak-balance fastrak-dremelIK fastrak-twoArm fastrak-oneLeg legTraj sensors
 
 include_HEADERS = include/Fastrak.h
 
@@ -24,8 +24,8 @@ fastrak_oneLeg_LDADD = $(techlibs) libfastrak.la
 legIKTest_SOURCES = src/legIKTest.cpp
 legIKTest_LDADD = $(techlibs)
 
-legTraj_SOURCES = src/legTraj.cpp
-legTraj_LDADD = $(techlibs)
+oneLeg_SOURCES = src/oneLeg.cpp
+oneLeg_LDADD = $(techlibs)
 
 sensors_SOURCES = src/sensors.cpp
 sensors_LDADD = $(techlibs)
