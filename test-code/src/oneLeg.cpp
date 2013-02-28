@@ -22,11 +22,11 @@ int main(int argc, char **argv)
     //hubo.loadURDFModel("/home/pete/Downloads/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
     hubo.loadURDFModel("/home/rapierevite/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
 
-//    balance(hubo);
+    balance(hubo);
 //    shiftToSide(right);
 //    shiftToSide2(RIGHT);
 //    pitchAnkles(hubo);
-    checkFKs(hubo);
+//    checkFKs(hubo);
 }
 
 void checkFKs(Hubo_Tech &hubo)
@@ -160,8 +160,7 @@ void balance(Hubo_Tech &hubo)
     double KpCOM = 1;
     double dt, prevTime = hubo.getTime();
     double i, imax=50;
-
-    crouch(hubo);
+    double initTime = hubo.getTime();
 
     while(!daemon_sig_quit)
     {
@@ -177,6 +176,12 @@ void balance(Hubo_Tech &hubo)
             i++; // increment i
 
             // reset hip roll limits
+
+            if(prevTime - initTime > 3.0)
+                crouch(hubo);
+
+            if(prevTime - initTime > 10.0)
+                shiftToSide(hubo, RIGHT);
 
             setDoubleSupportLimits(hubo);
             // get center of mass vector for Hubo w.r.t. Neck
