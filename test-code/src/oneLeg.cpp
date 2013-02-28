@@ -2,7 +2,7 @@
 #include "kinematics/BodyNode.h"
 
 void balance(Hubo_Tech &hubo);
-void crouch(Hubo_Tech &hubo);
+int crouch(Hubo_Tech &hubo);
 void shiftToSide(Hubo_Tech &hubo, int side);
 void setDoubleSupportLimits(Hubo_Tech &hubo);
 Vector3d getBalancePt2COM(Hubo_Tech &hubo, Eigen::Isometry3d world2COM, int phase_t);
@@ -19,8 +19,8 @@ int main(int argc, char **argv)
 {
     // Create Hubo_Tech object
     Hubo_Tech hubo;
-    //hubo.loadURDFModel("/home/pete/Downloads/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
-    hubo.loadURDFModel("/home/rapierevite/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
+    hubo.loadURDFModel("/home/pete/Downloads/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
+    //hubo.loadURDFModel("/home/rapierevite/hubo-motion-rt/src/dart_Lite/urdf/huboplus.urdf");
 
     balance(hubo);
 //    shiftToSide(right);
@@ -159,9 +159,10 @@ void balance(Hubo_Tech &hubo)
     double compGainAnklePitch = 0.001;
     double KpCOM = 1;
     double dt, prevTime = hubo.getTime();
-    double i, imax=50;
+    double i, imax=80;
     double initTime = hubo.getTime();
-
+    bool  crouch_flag=true;
+ 
     while(!daemon_sig_quit)
     {
         // Get necessary information
@@ -177,12 +178,19 @@ void balance(Hubo_Tech &hubo)
 
             // reset hip roll limits
 
-            if(prevTime - initTime > 3.0)
+            if(prevTime - initTime > 3.0 && crouch_flag==true)
+            {
+                std::cout << "crouching..." << std::endl;
+                crouch_flag=false;
                 crouch(hubo);
+            }
 
-            if(prevTime - initTime > 10.0)
+/*            if(prevTime - initTime > 10.0)
+            {
+                std::cout << "shifting..." << std::endl;
                 shiftToSide(hubo, RIGHT);
-
+            }
+*/
             setDoubleSupportLimits(hubo);
             // get center of mass vector for Hubo w.r.t. Neck
             world2COM = hubo.getCOM_FullBody();
@@ -229,10 +237,14 @@ void balance(Hubo_Tech &hubo)
     }
 }
 
-void crouch(Hubo_Tech &hubo)
+int crouch(Hubo_Tech &hubo)
 {
     Eigen::Isometry3d ltFootTF, rtFootTF;
-    Vector6d ltLegAngles, rtLegAngles, ltLegAnglesPrev, rtLegAnglesPrev;
+    Vector6d ltLegAngles, rtLegAngles, ltLegAnglesPrev, rtLegAnglesPrev, ltLegVels, rtLegVels;
+    double dt, prevTime = hubo.getTime();
+    double compGainAnkleRoll = 0.001;
+    double compGainAnklePitch = 0.001;
+    double KpCOM = .5;
 
     // Get necessary information
     hubo.getLegAngles(LEFT, ltLegAnglesPrev);   ///get Left leg joint angles
@@ -240,16 +252,44 @@ void crouch(Hubo_Tech &hubo)
     hubo.huboLegFK(ltFootTF, ltLegAnglesPrev, LEFT); ///get transformation for 'legSide' foot
     hubo.huboLegFK(rtFootTF, rtLegAnglesPrev, RIGHT); ///get transformation for 'legSide' foot
 
-    ltFootTF(2,3) += 0.1;
-    rtFootTF(2,3) += 0.1;
+    ltFootTF(2,3) += 0.05;
+    rtFootTF(2,3) += 0.05;
 
     hubo.huboLegIK(ltLegAngles, ltFootTF, ltLegAnglesPrev, LEFT);
     hubo.huboLegIK(rtLegAngles, rtFootTF, rtLegAnglesPrev, RIGHT);
 
-    hubo.setLegAngles(LEFT, ltLegAngles);
-    hubo.setLegAngles(RIGHT, rtLegAngles);
+    while(!daemon_sig_quit)
+    {
+         // Get necessary information
+        hubo.update();  ///get latest data from ach channels
+        // check if new information was received
+        dt = hubo.getTime() - prevTime;
+        prevTime = hubo.getTime();
 
-    hubo.sendControls();
+        // if new information received
+        if(dt > 0)
+        {
+            hubo.getLegAngles(LEFT, ltLegAnglesPrev);   ///get Left leg joint angles
+            hubo.getLegAngles(RIGHT, rtLegAnglesPrev);   ///get Left leg joint angles
+
+            if((ltLegAngles - ltLegAnglesPrev).norm() < 0.075)
+                return 0;
+
+            ltLegVels = KpCOM*(ltLegAngles - ltLegAnglesPrev);
+            rtLegVels = KpCOM*(rtLegAngles - rtLegAnglesPrev);
+
+            // Compute ankle joint velocities using resistant and compliant terms
+            ltLegVels(4) += compGainAnklePitch * hubo.getLeftFootMy(); // add compliance to ankle pitch
+            ltLegVels(5) += compGainAnkleRoll * hubo.getLeftFootMx(); // add compliance to ankle roll
+            rtLegVels(4) += compGainAnklePitch * hubo.getRightFootMy(); // add compliance to ankle pitch
+            rtLegVels(5) += compGainAnkleRoll * hubo.getRightFootMx(); // add compliance to ankle roll
+
+            hubo.setLegVels(LEFT, ltLegVels);
+            hubo.setLegVels(RIGHT, rtLegVels);
+
+            hubo.sendControls();
+        }
+    }
 }
 
 void shiftToSide(Hubo_Tech &hubo, int side)
@@ -262,7 +302,7 @@ void shiftToSide(Hubo_Tech &hubo, int side)
     double velRAP, velRAR, velRHR;
     double compGainAnkleRoll = 0.001;
     double compGainAnklePitch = 0.001;
-    double KpCOM = 0.1;
+    double KpCOM = .5;
     double dt, prevTime = hubo.getTime();
     double i, imax=50;
 
