@@ -6,6 +6,7 @@ Fastrak::Fastrak()
     fastrakScale = 1.0;
 }
 
+
 Fastrak::~Fastrak(void)
 {
     //TODO: Do we need to clean up ACH memory?
@@ -18,13 +19,12 @@ ctrl_flag_t Fastrak::initFastrak(bool assert)
 
     if( ACH_OK != r )
     {
-        fprintf(stderr, "Unable to open libery channel: (%d) %s!\n",
+        fprintf(stderr, "Unable to open fastrak channel: (%d) %s\n",
             r, ach_result_to_string((ach_status_t)r));
         //if(assert)
         //  daemon_assert( ACH_OK == r, __LINE__ );
         return CHAN_OPEN_FAIL;
     }
-    printf("ach open successfully!!!\n");
 
     return SUCCESS;    
 }
@@ -32,37 +32,30 @@ ctrl_flag_t Fastrak::initFastrak(bool assert)
 void Fastrak::setFastrakScale( double scale ) { fastrakScale = scale; }
 double Fastrak::getFastrakScale() { return fastrakScale; };
 
-// Wait until that sensor's data coming in
 ctrl_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Quaterniond &quat, int sensor, bool update )
 {
     int r = ACH_OK;
-    int s;
-
-    if(update) {
-//        printf("in getPose\n");
+    sensor--;
+    if(update)
+    {
         size_t fs;
-        r = ach_get( &chan_fastrak, &fastrak, sizeof(fastrak_t), &fs, NULL, ACH_O_LAST );
-        if ( r == ACH_OK ) {
-  //         printf("read %d bytes data\n", fs);
-           assert( sizeof(fastrak_t) == fs );
-        } else {
-            return SENSOR_OOB;
- //               printf("ach_get failed\n");
-        }
+        r = ach_get( &chan_fastrak, &fastrak, sizeof(fastrak), &fs, NULL, ACH_O_LAST );
+        if( r == ACH_OK )
+            daemon_assert( sizeof(fastrak) == fs, __LINE__ );
     }
 
-    sensor--;
-    
-    if ( (sensor >= 0) && (sensor < 8) ) {
-        position[0] = fastrak.sData[sensor][0]/fastrakScale;
-        position[1] = fastrak.sData[sensor][1]/fastrakScale;
-        position[2] = fastrak.sData[sensor][2]/fastrakScale;
-        
-        quat.w() = (double)fastrak.sData[sensor][3];
-        quat.x() = (double)fastrak.sData[sensor][4];
-        quat.y() = (double)fastrak.sData[sensor][5];
-        quat.z() = (double)fastrak.sData[sensor][6];
-    } else
+    if( sensor < 4 )
+    {
+        position[0] = fastrak.data[sensor][0]/fastrakScale;
+        position[1] = fastrak.data[sensor][1]/fastrakScale;
+        position[2] = fastrak.data[sensor][2]/fastrakScale;
+
+        quat.w() = (double)fastrak.data[sensor][3];
+        quat.x() = (double)fastrak.data[sensor][4];
+        quat.y() = (double)fastrak.data[sensor][5];
+        quat.z() = (double)fastrak.data[sensor][6];
+    }
+    else
         return SENSOR_OOB;
 
 //    if( ACH_OK != r )
@@ -102,4 +95,5 @@ ctrl_flag_t Fastrak::getPose( Eigen::Isometry3d &tf, int sensor, bool update )
     return flag;
     
 }
+
 
