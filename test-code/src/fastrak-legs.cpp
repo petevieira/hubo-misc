@@ -15,9 +15,9 @@ void usage(std::ostream& ostr) {
         "\n"
         "OPTIONS:\n"
         "\n"
-        "  -l, --left           Control left arm only.\n"
-        "  -r, --right          Control right arm only.\n"
-        "  -b, --both           Control both arms.\n"
+        "  -l, --left           Control left leg only.\n"
+        "  -r, --right          Control right leg only.\n"
+        "  -b, --both           Control both legs.\n"
         "  -V, --verbose        Show output.\n"
         "  -H, --help           See this message\n";
 }
@@ -196,14 +196,13 @@ int main(int argc, char **argv)
             // print data every i cycles
             if( i>=imax && print==true)
             {
-                i = 0;
-                std::cout << "Fastraktl: " << lLegTrans.transpose()
-                          << "\nFastraktr: " << rLegTrans.transpose()
-                          << "\nLEFTqd: " << lLegAnglesNext.transpose()
-                          << "\nRIGTqd: " << rLegAnglesNext.transpose()
+                std::cout << "Fastrak Position Lt(m): " << lLegTrans.transpose()
+                          << "\nFastrak Position Rt(m): " << rLegTrans.transpose()
+                          << "\nLeft  Leg Angles(rad): " << lLegAnglesNext.transpose()
+                          << "\nRight Leg Angles(rad): " << rLegAnglesNext.transpose()
                           << std::endl;
             }
-            i++;
+            if(i>=imax) i=0; i++;
         }
     }
 }
