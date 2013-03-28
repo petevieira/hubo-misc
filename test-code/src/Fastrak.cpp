@@ -13,7 +13,7 @@ Fastrak::~Fastrak(void)
 }
 
 
-tech_flag_t Fastrak::initFastrak(bool assert)
+ctrl_flag_t Fastrak::initFastrak(bool assert)
 {
     int r = ach_open( &chan_fastrak, FASTRAK_CHAN_NAME, NULL );
 
@@ -32,7 +32,7 @@ tech_flag_t Fastrak::initFastrak(bool assert)
 void Fastrak::setFastrakScale( double scale ) { fastrakScale = scale; }
 double Fastrak::getFastrakScale() { return fastrakScale; };
 
-tech_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Quaterniond &quat, int sensor, bool update )
+ctrl_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Quaterniond &quat, int sensor, bool update )
 {
     int r = ACH_OK;
     sensor--;
@@ -64,10 +64,10 @@ tech_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Quaterniond &qua
 }
 
 
-tech_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Matrix3d &rotation, int sensor, bool update )
+ctrl_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Matrix3d &rotation, int sensor, bool update )
 {
     Eigen::Quaterniond quat;
-    tech_flag_t flag = getPose( position, quat, sensor, update );
+    ctrl_flag_t flag = getPose( position, quat, sensor, update );
 
     if( flag==SENSOR_OOB )
         return flag;
@@ -78,12 +78,12 @@ tech_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Matrix3d &rotati
 }
 
 
-tech_flag_t Fastrak::getPose( Eigen::Isometry3d &tf, int sensor, bool update )
+ctrl_flag_t Fastrak::getPose( Eigen::Isometry3d &tf, int sensor, bool update )
 {
     Eigen::Vector3d position;
     Eigen::Quaterniond quat;
 
-    tech_flag_t flag = getPose( position, quat, sensor, update );
+    ctrl_flag_t flag = getPose( position, quat, sensor, update );
 
     if( flag==SENSOR_OOB )
         return flag;
@@ -95,4 +95,5 @@ tech_flag_t Fastrak::getPose( Eigen::Isometry3d &tf, int sensor, bool update )
     return flag;
     
 }
+
 

@@ -1,12 +1,77 @@
-#include <Hubo_Tech.h>
+#include <Hubo_Control.h>
 #include <iostream>
 #include <fstream>
+#include <getopt.h>
 #include "Fastrak.h"
 
 #define FOOT_WIDTH = .130 // Width of Hubo's foot in meters
 
+/**
+ * Prints out how to run this program
+*/
+void usage(std::ostream& ostr) {
+    ostr << 
+        "usage: fastrak-arms [OPTIONS] \n"
+        "\n"
+        "OPTIONS:\n"
+        "\n"
+        "  -l, --left           Control left arm only.\n"
+        "  -r, --right          Control right arm only.\n"
+        "  -b, --both           Control both arms.\n"
+        "  -V, --verbose        Show output.\n"
+        "  -H, --help           See this message\n";
+}
+
+/**
+ * Main function that loops reading the sensors and commanding
+ * Hubo's arm joints based on the poses of the hands
+*/
 int main(int argc, char **argv)
 {
+
+    // variables for the command line arguments
+    bool print = false; // whether to print output or not
+    bool left = false; // whether to set left arm angles
+    bool right = false; // whether to set right arm angles
+
+    // check if no arguments given, if not report usage
+    if (argc != 2)
+    {
+        usage(std::cerr);
+        return 1;
+    }
+
+    // command line lone options
+    const struct option long_options[] = 
+    {
+        { "left",       no_argument, 0, 'l' },
+        { "right",      no_argument, 0, 'r' },
+        { "both",       no_argument, 0, 'b' },
+        { "verbose",    no_argument, 0, 'V' },
+        { "help",       no_argument, 0, 'H' },
+        { 0,            0,           0,  0  },
+    };
+
+    // command line short options
+    const char* short_options = "lrbVH";
+
+    // command line option and option index number
+    int opt, option_index;
+
+    // loop through command line options and set values accordingly
+    while ( (opt = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1 )
+    {
+        switch (opt)
+        {
+            case 'l': left = true; break;
+            case 'r': right = true; break;
+            case 'b': left = true; right = true; break;
+            case 'V': print = true; break;
+            case 'H': usage(std::cout); exit(0); break;
+            default:  usage(std::cerr); exit(1); break;
+        }
+    }
+
     // LOCAL VARIABLES
     Vector6d initialLeftLegAngles, initialRightLegAngles;
     Vector6d refLeftLegAngles, refRightLegAngles;
@@ -21,10 +86,11 @@ int main(int argc, char **argv)
     double initialFootHeight = 0.1;
     double dt, ptime;
     int i=0, imax=50;
+    int leftSensor=3; rightSensor=4;
 
     // OBJECTS
     // Create Hubo_Tech object
-    Hubo_Tech hubo;
+    Hubo_Control hubo;
 
     // Create Fastrak object
     Fastrak fastrak;
@@ -43,40 +109,11 @@ int main(int argc, char **argv)
     // Send commands to the control daemon 
     hubo.sendControls();
 
-    hubo.getLegAngles(LEFT, initialLeftLegAngles);
-    hubo.getLegAngles(RIGHT, initialRightLegAngles);
-
-    // Get feet locations
-    hubo.huboLegFK(leftFootTransform, initialLeftLegAngles, LEFT);
-    hubo.huboLegFK(rightFootTransform, initialRightLegAngles, RIGHT);
-
-    // Adjust height (z-value)
-    leftFootTransform(2,3) += initialFootHeight;
-    rightFootTransform(2,3) += initialFootHeight;
-
-    // Get new leg joint angles
-    hubo.huboLegIK(lLegAnglesNext, leftFootTransform, initialLeftLegAngles, LEFT);
-    hubo.huboLegIK(rLegAnglesNext, rightFootTransform, initialRightLegAngles, RIGHT);
-
-    // set leg angles to initial positions
-    hubo.setLeftLegAngles( lLegAnglesNext, false );
-    hubo.setRightLegAngles( rLegAnglesNext, false );
-
-    // Send commands to the control daemon
-    hubo.sendControls();
-
-    // wait till the legs get to the initial positions
-    while((rLegAnglesNext - checkr).norm() > 0.075 && (lLegAnglesNext - checkl).norm() > 0.075)
-    {
-        hubo.update(); // Get latest data from ach channels
-        hubo.getLegAngles(LEFT, checkl);
-        hubo.getLegAngles(RIGHT, checkr);
-    }
-
     // Get initial Fastrak sensors location and orientation
-    fastrak.getPose(lFastrakOrigin, lRotOrigin, 1, true);
-    fastrak.getPose(rFastrakOrigin, rRotOrigin, 2, false);
+    fastrak.getPose(lFastrakOrigin, lRotOrigin, leftSensor, true);
+    fastrak.getPose(rFastrakOrigin, rRotOrigin, rightSensor, false);
 
+    // Get initial joint angles of the legs
     hubo.getLeftLegAngles(lLegAnglesNext);
     hubo.getRightLegAngles(rLegAnglesNext);
 
@@ -100,9 +137,6 @@ int main(int argc, char **argv)
 
         // if new data is available...
         if(dt>0) {
-
-            // increment counter for printing
-            i++;
 
             // get current joint angles
             hubo.getLeftLegAngles(lLegAnglesCurrent);
@@ -143,27 +177,33 @@ int main(int argc, char **argv)
             hubo.huboLegIK( lLegAnglesNext, lTransf, lLegAnglesCurrent, LEFT );
             hubo.huboLegIK( rLegAnglesNext, rTransf, rLegAnglesCurrent, RIGHT );
 
-            // set joint angles
-            hubo.setLeftLegAngles( lLegAnglesNext );
-            hubo.setRightLegAngles( rLegAnglesNext );
+            // set and get joint angles
+            if( left==true )
+            {
+                hubo.setLeftLegAngles( lLegAnglesNext, false );
+                hubo.getLeftLegAngles( lActualAngles );
+            }
 
-            // get current joint angles
-            hubo.getLeftLegAngles( lActualAngles );
-            hubo.getRightLegAngles( rActualAngles );
+            if( right==true )
+            {
+                hubo.setRightLegAngles( rLegAnglesNext, false );
+                hubo.getRightLegAngles( rActualAngles );
+            }
 
             // send control references
             hubo.sendControls();
 
             // print data every i cycles
-            if( i>=imax )
+            if( i>=imax && print==true)
             {
                 i = 0;
-/*                std::cout << "Fastraktl: " << lLegTrans.transpose()
+                std::cout << "Fastraktl: " << lLegTrans.transpose()
                           << "\nFastraktr: " << rLegTrans.transpose()
                           << "\nLEFTqd: " << lLegAnglesNext.transpose()
                           << "\nRIGTqd: " << rLegAnglesNext.transpose()
                           << std::endl;
-*/            }
+            }
+            i++;
         }
     }
 }
