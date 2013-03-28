@@ -2,10 +2,10 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 #fastrak_balance_CPPFLAGS = -I./include -g -I/usr/include/eigen3 -I/usr/local/include/eigen3
 
-techlibs = -lm -lach -lc -lhubotech -ldaemonizer -lrt -lhuboparams -ldartlite
+techlibs = -lm -lach -lc -lhuboctrl -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = oneLeg #legIKTest fastrak-oneLeg #fastrak-balance fastrak-dremelIK fastrak-twoArm fastrak-oneLeg legTraj sensors
+bin_PROGRAMS = fastrak-arms fastrak-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
 
 include_HEADERS = include/Fastrak.h
 
@@ -15,11 +15,11 @@ fastrak_balance_LDADD = $(techlibs) libfastrak.la
 fastrak_dremelIK_SOURCES = src/fastrak-dremelIK.cpp
 fastrak_dremelIK_LDADD = $(techlibs) libfastrak.la
 
-fastrak_twoArm_SOURCES = src/fastrak-twoArm.cpp
-fastrak_twoArm_LDADD = $(techlibs) libfastrak.la
+fastrak_arms_SOURCES = src/fastrak-arms.cpp
+fastrak_arms_LDADD = $(techlibs) libfastrak.la
 
-fastrak_oneLeg_SOURCES = src/fastrak-oneleg.cpp
-fastrak_oneLeg_LDADD = $(techlibs) libfastrak.la
+fastrak_legs_SOURCES = src/fastrak-legs.cpp
+fastrak_legs_LDADD = $(techlibs) libfastrak.la
 
 legIKTest_SOURCES = src/legIKTest.cpp
 legIKTest_LDADD = $(techlibs)
