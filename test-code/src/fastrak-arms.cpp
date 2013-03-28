@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     fastrak.setFastrakScale( 1.0 );
 
     // Local Variables 
-    Vector6d rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr, armNomAcc;
+    Vector6d rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr, armNomAcc, armNomVel, dqLeft, dqRight;
     Vector6d lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
     Vector3d lArmTrans, ltransEE, lTransInitial, lArmFastrak;
     Vector3d rArmTrans, rtransEE, rTransInitial, rArmFastrak; 
@@ -93,13 +93,17 @@ int main(int argc, char **argv)
     int i=0, imax=40;
     double dt, ptime;
     int leftSensor=2, rightSensor=5;
+    double a=0.4, v=1.0;
 
     // Define arm nominal acceleration 
-    armNomAcc << 0.3, 0.3, 0.3, 0.3, 0.3, 0.3;
+    armNomAcc << a, a, a, a, a, a;
+    armNomVel << v, v, v, v, v, v;
 
     // Set arm nominal accelerations 
     hubo.setLeftArmNomAcc(armNomAcc);
     hubo.setRightArmNomAcc(armNomAcc);
+    hubo.setLeftArmNomSpeeds(armNomVel);
+    hubo.setRightArmNomSpeeds(armNomVel);
 
     // Send commands to the control daemon 
     hubo.sendControls();
@@ -109,21 +113,21 @@ int main(int argc, char **argv)
     fastrak.getPose( rTransInitial, rRotInitial, rightSensor, false );
 
     // Define starting joint angles for the arms 
-//    lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0;
-//    rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0;
+    lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0;
+    rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0;
 
     // Set the arm joint angles and send commands to the control daemon
-//    hubo.setLeftArmAngles( lArmAnglesNext, true );
-//    hubo.setRightArmAngles( rArmAnglesNext, true );
+    hubo.setLeftArmAngles( lArmAnglesNext, true );
+    hubo.setRightArmAngles( rArmAnglesNext, true );
 
     // While the norm of the right arm angles is greater than 0.075
     // keep waiting for arm to get to desired position
-//    while ((lArmAnglesNext - checkl).norm() > 0.075 && (rArmAnglesNext - checkr).norm() > 0.075)
-//    {
-//        hubo.update(); // Get latest data from ach channels
-//        hubo.getLeftArmAngles(checkl); // Get current left arm joint angles
-//        hubo.getRightArmAngles(checkr); // Get current right arm joint angles
-//    }
+    while ((lArmAnglesNext - checkl).norm() > 0.075 && (rArmAnglesNext - checkr).norm() > 0.075)
+    {
+        hubo.update(); // Get latest data from ach channels
+        hubo.getLeftArmAngles(checkl); // Get current left arm joint angles
+        hubo.getRightArmAngles(checkr); // Get current right arm joint angles
+    }
 
     // Get current pose of the hands
     hubo.huboArmFK(lcurrEE, lArmAnglesNext, LEFT);
@@ -177,6 +181,18 @@ int main(int argc, char **argv)
             hubo.huboArmIK( lArmAnglesNext, lTransf, lArmAnglesCurrent, LEFT );
             hubo.huboArmIK( rArmAnglesNext, rTransf, rArmAnglesCurrent, RIGHT );
 
+            // compute change in joint angles
+            dqLeft = (lArmAnglesNext - lArmAnglesCurrent).cwiseAbs();
+            dqLeft = dqLeft / dqLeft.maxCoeff();
+            dqRight = (rArmAnglesNext - rArmAnglesCurrent).cwiseAbs();
+            dqRight = dqRight / dqRight.maxCoeff();
+
+            // scale nominal joint accelerations and speeds 
+            hubo.setLeftArmNomAcc(armNomAcc.cwiseProduct(dqLeft));
+            hubo.setRightArmNomAcc(armNomAcc.cwiseProduct(dqRight));
+            hubo.setLeftArmNomSpeeds(armNomVel.cwiseProduct(dqLeft));
+            hubo.setRightArmNomSpeeds(armNomVel.cwiseProduct(dqRight));
+
             // set and get joint angles
             if( left==true )
             {
@@ -200,12 +216,18 @@ int main(int argc, char **argv)
             if( i>=imax && print==true )
             {
                 std::cout //<< "\033[2J"
-                          << "Fastrak Position Lt(m): \n" << lArmTrans
-                          << "Fastrak Position Rt(m): \n" << rArmTrans
-                          << "\nLeft  Arm Angles(rad): " << lActualAngles.transpose()
-                          << "\nRight Arm Angles(rad): " << rActualAngles.transpose()
-                          << "\nRight hand torques(N-m): " << hubo.getRightHandMx() << ", " << hubo.getRightHandMy()
-                          << "\nLeft  hand torques(N-m): " << hubo.getLeftHandMx() << ", " << hubo.getLeftHandMy()
+                          << "Fastrak Position Lt(m): " << lArmTrans.transpose()
+                          << "\nFastrak Rotation Lt: \n" << lRot
+                          << "\nFastrak Position Rt(m): " << rArmTrans.transpose()
+                          << "\nFastrak Rotation Rt: \n" << rRot
+                          << "\nLeft  Arm Actual Angles (rad): " << lActualAngles.transpose()
+                          << "\nLeft  Arm Desired Angles(rad): " << lArmAnglesNext.transpose()
+                          << "\nRight Arm Actual Angles (rad): " << rActualAngles.transpose()
+                          << "\nRight Arm Desired Angles(rad): " << rArmAnglesNext.transpose()
+                          << "\nRight hand torques(N-m)(Mx,My): " << hubo.getRightHandMx() << ", " << hubo.getRightHandMy()
+                          << "\nLeft  hand torques(N-m)(Mx,My): " << hubo.getLeftHandMx() << ", " << hubo.getLeftHandMy()
+                          << "\ndqLeft : " << dqLeft.transpose()
+                          << "\ndqRight: " << dqRight.transpose()
                           << std::endl;
             }
             if(i>=imax) i=0; i++;
