@@ -16,6 +16,7 @@ void usage(std::ostream& ostr) {
         "  -l, --left           Control left arm only.\n"
         "  -r, --right          Control right arm only.\n"
         "  -b, --both           Control both arms.\n"
+        "  -n, --nosend         Don't send commands to Hubo.\n"
         "  -V, --verbose        Show output.\n"
         "  -H, --help           See this message\n";
 }
@@ -27,7 +28,7 @@ void usage(std::ostream& ostr) {
 int main(int argc, char **argv)
 {
     // check if no arguments given, if not report usage
-    if (argc != 2)
+    if (argc < 2)
     {
         usage(std::cerr);
         return 1;
@@ -36,6 +37,7 @@ int main(int argc, char **argv)
     bool print = false; // whether to print output or not
     bool left = false; // whether to set left arm angles
     bool right = false; // whether to set right arm angles
+    bool send = true; // whether to send commands or not
 
     // command line lone options
     const struct option long_options[] = 
@@ -43,13 +45,14 @@ int main(int argc, char **argv)
         { "left",       no_argument, 0, 'l' },
         { "right",      no_argument, 0, 'r' },
         { "both",       no_argument, 0, 'b' },
+        { "nosend",     no_argument, 0, 'n' },
         { "verbose",    no_argument, 0, 'V' },
         { "help",       no_argument, 0, 'H' },
         { 0,            0,           0,  0  },
     };
 
     // command line short options
-    const char* short_options = "lrbVH";
+    const char* short_options = "lrbnVH";
 
     // command line option and option index number
     int opt, option_index;
@@ -62,6 +65,7 @@ int main(int argc, char **argv)
             case 'l': left = true; break;
             case 'r': right = true; break;
             case 'b': left = true; right = true; break;
+            case 'n': send = false; break;
             case 'V': print = true; break;
             case 'H': usage(std::cout); exit(0); break;
             default:  usage(std::cerr); exit(1); break;
@@ -85,9 +89,10 @@ int main(int argc, char **argv)
     Vector3d lArmTrans, ltransEE, lTransInitial, lArmFastrak;
     Vector3d rArmTrans, rtransEE, rTransInitial, rArmFastrak; 
     Eigen::Matrix3d lRotInitial, rRotInitial, lRot, rRot;
-    Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent, B, Br;
+    Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent;
     int i=0, imax=40;
     double dt, ptime;
+    int leftSensor=1, rightSensor=2;
 
     // Define arm nominal acceleration 
     armNomAcc << 0.3, 0.3, 0.3, 0.3, 0.3, 0.3;
@@ -100,8 +105,8 @@ int main(int argc, char **argv)
     hubo.sendControls();
 
     // Get initial Fastrak sensors location and orientation
-    fastrak.getPose( lTransInitial, lRotInitial, 3, true );
-    fastrak.getPose( rTransInitial, rRotInitial, 4, false );
+    fastrak.getPose( lTransInitial, lRotInitial, leftSensor, true );
+    fastrak.getPose( rTransInitial, rRotInitial, rightSensor, false );
 
     // Define starting joint angles for the arms 
 //    lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0;
@@ -136,9 +141,9 @@ int main(int argc, char **argv)
         dt = hubo.getTime() - ptime;
         ptime = hubo.getTime();
 
+        // if new data is available...
         if(dt>0)
         {
-
             // get current joint angles
             hubo.getLeftArmAngles(lArmAnglesCurrent);
             hubo.getRightArmAngles(rArmAnglesCurrent);
@@ -148,8 +153,8 @@ int main(int argc, char **argv)
             hubo.huboArmFK(rHandCurrent, rArmAnglesCurrent, RIGHT);    
 
             // get Fastrak data for left and right sensors
-            fastrak.getPose( lArmFastrak, lRot, 3, true );
-            fastrak.getPose( rArmFastrak, rRot, 4, false );
+            fastrak.getPose( lArmFastrak, lRot, leftSensor, true );
+            fastrak.getPose( rArmFastrak, rRot, rightSensor, false );
 
             // compute Fastrak relative translations
             lArmTrans = lArmFastrak - lTransInitial;
@@ -186,9 +191,12 @@ int main(int argc, char **argv)
             }
 
             // send control references
-            hubo.sendControls();
+            if( send == true )
+            {
+                hubo.sendControls();
+            }
 
-            // print output
+            // print output every imax cycles
             if( i>=imax && print==true )
             {
                 std::cout //<< "\033[2J"
