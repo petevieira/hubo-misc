@@ -92,7 +92,7 @@ int main(int argc, char **argv)
     Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent;
     int i=0, imax=40;
     double dt, ptime;
-    int leftSensor=1, rightSensor=2;
+    int leftSensor=2, rightSensor=5;
 
     // Define arm nominal acceleration 
     armNomAcc << 0.3, 0.3, 0.3, 0.3, 0.3, 0.3;

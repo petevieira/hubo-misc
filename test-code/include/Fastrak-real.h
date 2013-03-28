@@ -12,9 +12,7 @@
 
 #include <Hubo_Control.h>
 
-
-#define CHANNEL_NUM 8
-#define FASTRAK_CHAN_NAME "liberty"
+#define FASTRAK_CHAN_NAME "fastrak"
 
 
 class Fastrak
@@ -61,12 +59,12 @@ public:
 
     typedef struct
     {
-        float sData[CHANNEL_NUM][7];
-    } fastrak_t;
+        float data[4][7];
+    } fastrak_c_t;
 
 private:
     ach_channel_t chan_fastrak;
-    fastrak_t fastrak;
+    fastrak_c_t fastrak;
 
 };
 
