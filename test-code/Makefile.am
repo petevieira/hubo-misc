@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 techlibs = -lm -lach -lc -lhuboctrl -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = fastrak-arms fastrak-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
+bin_PROGRAMS = fastrak-arms #fastrak-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
 
 include_HEADERS = include/Fastrak.h
 

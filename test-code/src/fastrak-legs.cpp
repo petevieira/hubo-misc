@@ -9,15 +9,17 @@
 /**
  * Prints out how to run this program
 */
-void usage(std::ostream& ostr) {
+void usage(std::ostream& ostr)
+{
     ostr << 
         "usage: fastrak-arms [OPTIONS] \n"
         "\n"
         "OPTIONS:\n"
         "\n"
-        "  -l, --left           Control left leg only.\n"
-        "  -r, --right          Control right leg only.\n"
-        "  -b, --both           Control both legs.\n"
+        "  -l, --left           Control left arm only.\n"
+        "  -r, --right          Control right arm only.\n"
+        "  -b, --both           Control both arms.\n"
+        "  -n, --nosend         Don't send commands to Hubo.\n"
         "  -V, --verbose        Show output.\n"
         "  -H, --help           See this message\n";
 }
@@ -35,7 +37,7 @@ int main(int argc, char **argv)
     bool right = false; // whether to set right arm angles
 
     // check if no arguments given, if not report usage
-    if (argc != 2)
+    if (argc < 2)
     {
         usage(std::cerr);
         return 1;
@@ -47,13 +49,14 @@ int main(int argc, char **argv)
         { "left",       no_argument, 0, 'l' },
         { "right",      no_argument, 0, 'r' },
         { "both",       no_argument, 0, 'b' },
+        { "nosend",     no_argument, 0, 'n' },
         { "verbose",    no_argument, 0, 'V' },
         { "help",       no_argument, 0, 'H' },
         { 0,            0,           0,  0  },
     };
 
     // command line short options
-    const char* short_options = "lrbVH";
+    const char* short_options = "lrbnVH";
 
     // command line option and option index number
     int opt, option_index;
@@ -66,6 +69,7 @@ int main(int argc, char **argv)
             case 'l': left = true; break;
             case 'r': right = true; break;
             case 'b': left = true; right = true; break;
+            case 'n': send = false; break;
             case 'V': print = true; break;
             case 'H': usage(std::cout); exit(0); break;
             default:  usage(std::cerr); exit(1); break;
@@ -86,7 +90,7 @@ int main(int argc, char **argv)
     double initialFootHeight = 0.1;
     double dt, ptime;
     int i=0, imax=50;
-    int leftSensor=3; rightSensor=4;
+    int leftSensor=3, rightSensor=4;
 
     // OBJECTS
     // Create Hubo_Tech object
@@ -136,8 +140,8 @@ int main(int argc, char **argv)
         ptime = hubo.getTime();
 
         // if new data is available...
-        if(dt>0) {
-
+        if(dt>0)
+        {
             // get current joint angles
             hubo.getLeftLegAngles(lLegAnglesCurrent);
             hubo.getRightLegAngles(rLegAnglesCurrent);
@@ -147,8 +151,8 @@ int main(int argc, char **argv)
             hubo.huboLegFK(rFootCurrent, rLegAnglesCurrent, RIGHT);    
 
             // get Fastrak data for left and right sensors
-            fastrak.getPose( lLegFastrak, lRot, 1, true );
-            fastrak.getPose( rLegFastrak, rRot, 2, false );
+            fastrak.getPose( lLegFastrak, lRot, leftSensor, true );
+            fastrak.getPose( rLegFastrak, rRot, rightSensor, false );
 
             // compute Fastrak relative translations
             lLegTrans = lLegFastrak - lFastrakOrigin;
@@ -166,6 +170,7 @@ int main(int argc, char **argv)
             // make sure feet don't cross sagittal plane
             if(lTransf(1,3) - FOOT_WIDTH/2 < 0)
                 lTransf(1,3) = FOOT_WIDTH/2;
+
             if(rTransf(1,3) + FOOT_WIDTH/2 > 0)
                 rTransf(1,3) = -FOOT_WIDTH/2;
 
@@ -191,9 +196,12 @@ int main(int argc, char **argv)
             }
 
             // send control references
-            hubo.sendControls();
+            if( send == true )
+            {
+                hubo.sendControls();
+            }
 
-            // print data every i cycles
+            // print data every imax cycles
             if( i>=imax && print==true)
             {
                 std::cout << "Fastrak Position Lt(m): " << lLegTrans.transpose()
