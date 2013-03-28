@@ -189,23 +189,18 @@ int main(int argc, char **argv)
             hubo.sendControls();
 
             // print output
-            if( i==imax && print==true )
+            if( i>=imax && print==true )
             {
-                std::cout << "\033[2J"
-                          << "Fastraktl: \n" << lArmTrans
-                          << "\nFastrakl: \n" << lRot
-                          << "Fastraktr: \n" << rArmTrans
-                          << "\nFastrakr: \n" << rRot
-                          << "\nlTransf: \n" << lTransf.matrix()
-                          << "\nHuboOrient: \n" << lHandCurrent.matrix()
-                          << "\nlArmAnglesl: " << lActualAngles.transpose()
-                          << "\nrArmAnglesl: " << rActualAngles.transpose()
-                          << "\nRight hand torques: " << hubo.getRightHandMx() << ", " << hubo.getRightHandMy()
-                          << "\nLeft hand torques: " << hubo.getLeftHandMx() << ", " << hubo.getLeftHandMy()
+                std::cout //<< "\033[2J"
+                          << "Fastrak Position Lt(m): \n" << lArmTrans
+                          << "Fastrak Position Rt(m): \n" << rArmTrans
+                          << "\nLeft  Arm Angles(rad): " << lActualAngles.transpose()
+                          << "\nRight Arm Angles(rad): " << rActualAngles.transpose()
+                          << "\nRight hand torques(N-m): " << hubo.getRightHandMx() << ", " << hubo.getRightHandMy()
+                          << "\nLeft  hand torques(N-m): " << hubo.getLeftHandMx() << ", " << hubo.getLeftHandMy()
                           << std::endl;
-                          i = 0;
             }
-            i++;
+            if(i>=imax) i=0; i++;
         }
     }
 }
