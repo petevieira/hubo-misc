@@ -41,12 +41,12 @@ ctrl_flag_t Fastrak::getPose( Eigen::Vector3d &position, Eigen::Quaterniond &qua
     if(update) {
 //        printf("in getPose\n");
         size_t fs;
-        r = ach_get( &chan_fastrak, &fastrak, sizeof(fastrak_t), &fs, NULL, ACH_O_LAST );
+        r = ach_get( &chan_fastrak, fastrak.sData, sizeof(fastrak.sData), &fs, NULL, ACH_O_LAST );
         if ( r == ACH_OK ) {
   //         printf("read %d bytes data\n", fs);
-           assert( sizeof(fastrak_t) == fs );
+           assert( sizeof(fastrak.sData) == fs );
         } else {
-            return SENSOR_OOB;
+//            return SENSOR_OOB;
  //               printf("ach_get failed\n");
         }
     }

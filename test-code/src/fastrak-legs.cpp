@@ -4,7 +4,7 @@
 #include <getopt.h>
 #include "Fastrak.h"
 
-#define FOOT_WIDTH = .130 // Width of Hubo's foot in meters
+static const double FOOT_WIDTH = .130; // Width of Hubo's foot in meters
 
 /**
  * Prints out how to run this program
@@ -35,6 +35,7 @@ int main(int argc, char **argv)
     bool print = false; // whether to print output or not
     bool left = false; // whether to set left arm angles
     bool right = false; // whether to set right arm angles
+    bool send = true; // whether to send commands or not
 
     // check if no arguments given, if not report usage
     if (argc < 2)
@@ -76,22 +77,6 @@ int main(int argc, char **argv)
         }
     }
 
-    // LOCAL VARIABLES
-    Vector6d initialLeftLegAngles, initialRightLegAngles;
-    Vector6d refLeftLegAngles, refRightLegAngles;
-    Vector6d leftLegError, rightLegError;
-    Vector6d rActualAngles, rLegAnglesCurrent, rLegAnglesNext, checkr, legNomAcc;
-    Vector6d lActualAngles, lLegAnglesNext, lLegAnglesCurrent, checkl;
-    Vector3d lLegTrans, lFootInitialPos, lFastrakOrigin, lLegFastrak;
-    Vector3d rLegTrans, rFootInitialPos, rFastrakOrigin, rLegFastrak; 
-    Eigen::Matrix3d lRotOrigin, rRotOrigin, lRot, rRot;
-    Eigen::Isometry3d lFootInitialPose, rFootInitialPose, lTransf, rTransf, lFootCurrent, rFootCurrent, B, Br;
-    Eigen::Isometry3d leftFootTransform, rightFootTransform;
-    double initialFootHeight = 0.1;
-    double dt, ptime;
-    int i=0, imax=50;
-    int leftSensor=3, rightSensor=4;
-
     // OBJECTS
     // Create Hubo_Tech object
     Hubo_Control hubo;
@@ -103,12 +88,32 @@ int main(int argc, char **argv)
     // Set Fastrak readings scale to 1:1
     fastrak.setFastrakScale( 1.0 );
 
+    // LOCAL VARIABLES
+    Vector6d initialLeftLegAngles, initialRightLegAngles;
+    Vector6d refLeftLegAngles, refRightLegAngles;
+    Vector6d leftLegError, rightLegError;
+    Vector6d rActualAngles, rLegAnglesCurrent, rLegAnglesNext, checkr, legNomAcc, legNomVel, dqLeft, dqRight;
+    Vector6d lActualAngles, lLegAnglesNext, lLegAnglesCurrent, checkl;
+    Vector3d lLegTrans, lFootInitialPos, lFastrakOrigin, lLegFastrak;
+    Vector3d rLegTrans, rFootInitialPos, rFastrakOrigin, rLegFastrak; 
+    Eigen::Matrix3d lRotOrigin, rRotOrigin, lRot, rRot;
+    Eigen::Isometry3d lFootInitialPose, rFootInitialPose, lTransf, rTransf, lFootCurrent, rFootCurrent, B, Br;
+    Eigen::Isometry3d leftFootTransform, rightFootTransform;
+    double initialFootHeight = 0.1;
+    double dt, ptime;
+    int i=0, imax=50;
+    int leftSensor=2, rightSensor=5;
+    double a=0.6, v=1.0;
+
     // Define arm nominal acceleration 
-    legNomAcc << 0.3, 0.3, 0.3, 0.3, 0.3, 0.3;
+    legNomAcc << a, a, a, a, a, a;
+    legNomVel << v, v, v, v, v, v;
 
     // Set arm nominal accelerations 
     hubo.setLeftLegNomAcc(legNomAcc);
     hubo.setRightLegNomAcc(legNomAcc);
+    hubo.setLeftLegNomSpeeds(legNomVel);
+    hubo.setRightLegNomSpeeds(legNomVel);
 
     // Send commands to the control daemon 
     hubo.sendControls();
@@ -181,6 +186,18 @@ int main(int argc, char **argv)
             // get joint angles corresponding to transformations
             hubo.huboLegIK( lLegAnglesNext, lTransf, lLegAnglesCurrent, LEFT );
             hubo.huboLegIK( rLegAnglesNext, rTransf, rLegAnglesCurrent, RIGHT );
+
+            // compute change in joint angles
+            dqLeft = (lLegAnglesNext - lLegAnglesCurrent).cwiseAbs();
+            dqLeft = dqLeft / dqLeft.maxCoeff();
+            dqRight = (rLegAnglesNext - rLegAnglesCurrent).cwiseAbs();
+            dqRight = dqRight / dqRight.maxCoeff();
+
+            // scale nominal joint accelerations and speeds 
+            hubo.setLeftLegNomAcc(legNomAcc.cwiseProduct(dqLeft.cwiseSqrt()));
+            hubo.setRightLegNomAcc(legNomAcc.cwiseProduct(dqRight.cwiseSqrt()));
+            hubo.setLeftLegNomSpeeds(legNomVel.cwiseProduct(dqLeft));
+            hubo.setRightLegNomSpeeds(legNomVel.cwiseProduct(dqRight));
 
             // set and get joint angles
             if( left==true )
