@@ -3,8 +3,6 @@
 #include <fstream>
 #include <getopt.h>
 
-
-
 /**
  * @function: impedanceEq( Eigen::Vector2d x )
  * @brief: takes in position and velocity of joints and
@@ -14,9 +12,9 @@
 Eigen::Vector2d impedanceEq(Eigen::Vector2d dq, double dM)
 {
     double M, Q, K;
-    M = 10; // user set inertia
-    Q = 10; // user set damping
-    K = 10; // user set stiffness
+    M = 1; // user set inertia
+    Q = 100; // user set damping
+    K = 100; // user set stiffness
 
     // state space rep.
     Eigen::Vector2d dqDot;
@@ -24,8 +22,8 @@ Eigen::Vector2d impedanceEq(Eigen::Vector2d dq, double dM)
     Eigen::Vector2d B;
 
     A <<
-          0,   1,
-        K/M, Q/M;
+          0,    1,
+        -K/M, -Q/M;
 
     B << 0, dM/M;
 
@@ -49,7 +47,7 @@ void rk4(Eigen::Vector2d &dq, double dM, double dt )
     k1 = impedanceEq(dq, dM);
     k2 = impedanceEq(dq + .5*dt*k1, dM);
     k3 = impedanceEq(dq + .5*dt*k2, dM);
-    k4 = impedanceEq(dq + k3, dM);
+    k4 = impedanceEq(dq + dt*k3, dM);
 
     // compute new delta q
     dq = dq + dt*(k1 + 2*k2 + 2*k3 + k4)/6;
@@ -61,13 +59,13 @@ void rk4(Eigen::Vector2d &dq, double dM, double dt )
  *         and adjusts it to achieve desired moment about the ankles
  * @return: no return value. it adjust the desired joint angles by reference
 */
-void impedanceController(Eigen::Vector2d &dq, double dM, double &angle, double dt)
+double impedanceController(Eigen::Vector2d &dq, double dM, double angle, double dt)
 {
     double qNew;
 
     rk4(dq, dM, dt); // pass in dq(n) and get out dq(n+1)
-    qNew = angle + dq(0); // qd(n+1) + dq(n+1)
-    angle = qNew;
+    qNew = angle + dq(0); // qd(n+1) + (qNew(n+1) - qd(n+1))
+    return qNew;
 }
 
 /**
@@ -81,7 +79,6 @@ void usage(std::ostream& ostr) {
         "\n"
         "  -l, --left           Control left arm only.\n"
         "  -r, --right          Control right arm only.\n"
-        "  -b, --both           Control both arms.\n"
         "  -n, --nosend         Don't send commands to Hubo.\n"
         "  -V, --verbose        Show output.\n"
         "  -H, --help           See this message\n";
@@ -144,28 +141,14 @@ int main(int argc, char **argv)
     Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent, wristTF;
     int i=0, imax=40;
     double dt, ptime;
-    double a=0.4, v=1.0;
-    double lebAngle, rebAngle, dM;
+    double lebDesired, rebDesired, dM;
     Eigen::Vector2d dqL(0,0);
     Eigen::Vector2d dqR(0,0);
-
-    // Define arm nominal acceleration 
-    armNomAcc << a, a, a, a, a, a;
-    armNomVel << v, v, v, v, v, v;
-
-    // Set arm nominal accelerations 
-    hubo.setLeftArmNomAcc(armNomAcc);
-    hubo.setRightArmNomAcc(armNomAcc);
-    hubo.setLeftArmNomSpeeds(armNomVel);
-    hubo.setRightArmNomSpeeds(armNomVel);
-
-    // Send commands to the control daemon 
-    hubo.sendControls();
 
     // Define starting joint angles for the arms 
     lArmAnglesNext << 0, 0, 0, 0, 0, 0;
     rArmAnglesNext << 0, 0, 0, 0, 0, 0;
-
+ 
     // Set the arm joint angles and send commands to the control daemon
     if(left == true)
     {
@@ -179,15 +162,22 @@ int main(int argc, char **argv)
     }
     // While the norm of the right arm angles is greater than 0.075
     // keep waiting for arm to get to desired position
-    while ((lArmAnglesNext - checkl).norm() > 0.075 && (rArmAnglesNext - checkr).norm() > 0.075)
+    while ((lArmAnglesNext - checkl).norm() > 0.075 || (rArmAnglesNext - checkr).norm() > 0.075)
     {
         hubo.update(); // Get latest data from ach channels
         hubo.getLeftArmAngles(checkl); // Get current left arm joint angles
         hubo.getRightArmAngles(checkr); // Get current right arm joint angles
+        printf("moving\n");
     }
 
+    usleep(1000000);
     double MdL = hubo.getLeftHandMy();
     double MdR = hubo.getRightHandMy();
+    double qNew = 0.0;
+    // get current joint angles
+    lebDesired = hubo.getJointAngleState(LEB);
+    rebDesired = M_PI/2; //hubo.getJointAngleState(REB);
+    int inputD;
 
     while(!daemon_sig_quit)
     {
@@ -200,23 +190,23 @@ int main(int argc, char **argv)
         // if new data is available...
         if(dt>0)
         {
-            // get current joint angles
-            hubo.getJointAngle(lebAngle);
-            hubo.getJointAngle(rebAngle);
-
             // set and get joint angles
             if( left==true )
             {
                 dM = hubo.getLeftHandMy() - MdL;
-                impedanceController(dqL, dM, lebAngle, dt);
-                hubo.setJointAngle( LEB, lebAngle, false );
+                qNew = impedanceController(dqL, dM, lebDesired, dt);
+                hubo.setJointAngle( LEB, qNew, false );
             }
 
             if( right==true )
             {
-                dM = hubo.getRightHandMy() - MdL;
-                impedanceController(dqR, dM, rebAngle, dt);
-                hubo.setJointAngle( rebAngle, false );
+                dM = hubo.getRightHandMy() - MdR;
+                qNew = impedanceController(dqR, dM, rebDesired, dt);
+                hubo.setJointAngle( REB, qNew, false );
+    //            std::cout << "       dqR: " << dqR
+      //                    << "\n      dM: " << dM
+        //                  << "\nrebDesired: " << rebDesired*180/M_PI
+          //                << "\n      dt: " << dt << std::endl;
             }
 
             // send control references
@@ -229,13 +219,14 @@ int main(int argc, char **argv)
             if( i>=imax && print==true )
             {
                 std::cout //<< "\033[2J"
-                          << "LEBAngle: " << lebAngle
-                          << "\nLeft  hand torques(N-m)(Mx,My): " << hubo.getLeftHandMx() << ", " << hubo.getLeftHandMy()
-                          << "\nREBAngle: " << rebAngle
-                          << "\nRight hand torques(N-m)(Mx,My): " << hubo.getRightHandMx() << ", " << hubo.getRightHandMy()
+                          << "LEBAngle: " << lebDesired
+                          << "\nLeft  hand torques(N-m)(MdX,Mx|MdY,My): " << MdLx << ", " << hubo.getLeftHandMx() << " | " << MdLy << ", " << hubo.getLeftHandMy()
+                          << "\nREBAngle: " << rebDesired
+                          << "\nRight hand torques(N-m)(MdX,Mx|MdY,My): " << MdRx << ", " << hubo.getRightHandMx() << " | " << MdRy ", " << hubo.getRightHandMy()
                           << std::endl;
             }
             if(i>=imax) i=0; i++;
         }
     }
+    return 0;
 }
