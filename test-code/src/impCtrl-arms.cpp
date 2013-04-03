@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     Eigen::Vector2d dqLsy(0,0);
     Eigen::Vector2d dqReb(0,0);
     Eigen::Vector2d dqRsy(0,0);
-    double a=2.5, v=1.5;
+    double a=3.5, v=2.5;
 
     // Define starting joint angles for the arms 
     lArmAnglesNext << 0, 0, 0, 0, 0, 0;
@@ -120,10 +120,13 @@ int main(int argc, char **argv)
     hubo.setRightArmNomSpeeds(armNomVel);
 
     usleep(500000);
-    double MdLx = hubo.getLeftHandMx();
-    double MdLy = hubo.getLeftHandMy();
+    //double MdLx = hubo.getLeftHandMx();
+    double MdLx = hubo.getLeftHandMy();
+    //double MdLy = hubo.getLeftHandMy();
+    double MdLy = -hubo.getLeftHandMx();
     double MdRx = hubo.getRightHandMx();
     double MdRy = hubo.getRightHandMy();
+    // double FdRz = hubo.getRightHandFz(); // added by sungmoon 4/2/2013 --> RightHandFz not defined in Hubo-Control
     double qNew = 0.0;
 
     // get current joint angles
@@ -151,12 +154,12 @@ int main(int argc, char **argv)
             {
                 // Y-Moment (Elbow)
                 qNew = 0.0;
-                dMy = hubo.getLeftHandMy() - MdLy;
+                dMy = -hubo.getLeftHandMx() - MdLy;
                 qNew = impedanceController(dqLeb, dMy, lebDesired, dt);
                 hubo.setJointAngle( LEB, qNew, false );
                 // X-Moment (Shoulder Yaw)
                 qNew = 0.0;
-                dMx = hubo.getLeftHandMx() - MdLx;
+                dMx = hubo.getLeftHandMy() - MdLx;
                 qNew = impedanceController(dqLsy, dMx, lsyDesired, dt);
                 hubo.setJointAngle( LSY, qNew, false );
             }
@@ -193,7 +196,8 @@ int main(int argc, char **argv)
                           << "\nREB-qNew   : " << qNew*180/M_PI
                           << "\nREB-Actual : " << hubo.getJointAngleState(REB)*180/M_PI
                           << "\nRight hand torques(N-m)(MdX,Mx|MdY,My): " << MdRx << ", " << hubo.getRightHandMx() << " | " 
-                                                                          << MdRy << ", " << hubo.getRightHandMy()
+                                                                          << MdRy << ", " << hubo.getRightHandMy() //<< " | "
+                          //<< " Fz          : " << hubo.getRightHandFz()
                           << std::endl;
             }
             if(i>=imax) i=0; i++;
