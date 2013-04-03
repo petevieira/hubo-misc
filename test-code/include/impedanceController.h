@@ -15,8 +15,8 @@ Eigen::Vector2d impedanceEq(Eigen::Vector2d dq, double dM)
 {
     double M, Q, K; // best numbers so far: M=0.008, Q=0.4, K=7.0
     M = .008; // user set inertia (kg)
-    Q = .4; // user set damping (N-s/m)
-    K = 7; // user set stiffness (N/m)
+    Q = 1.5; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
+    K = .5; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
 
     // state space rep.
     Eigen::Vector2d dqDot;

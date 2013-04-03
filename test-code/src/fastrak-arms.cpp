@@ -92,21 +92,7 @@ int main(int argc, char **argv)
     Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent;
     int i=0, imax=40;
     double dt, ptime;
-    int leftSensor=2, rightSensor=5;
-    double a=0.4, v=1.0;
-
-    // Define arm nominal acceleration 
-    armNomAcc << a, a, a, a, a, a;
-    armNomVel << v, v, v, v, v, v;
-
-    // Set arm nominal accelerations 
-    hubo.setLeftArmNomAcc(armNomAcc);
-    hubo.setRightArmNomAcc(armNomAcc);
-    hubo.setLeftArmNomSpeeds(armNomVel);
-    hubo.setRightArmNomSpeeds(armNomVel);
-
-    // Send commands to the control daemon 
-    hubo.sendControls();
+    int leftSensor=1, rightSensor=2;
 
     // Get initial Fastrak sensors location and orientation
     fastrak.getPose( lTransInitial, lRotInitial, leftSensor, true );
@@ -117,8 +103,20 @@ int main(int argc, char **argv)
     rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0;
 
     // Set the arm joint angles and send commands to the control daemon
-    hubo.setLeftArmAngles( lArmAnglesNext, true );
-    hubo.setRightArmAngles( rArmAnglesNext, true );
+    hubo.setLeftArmAngles( lArmAnglesNext );
+    hubo.setRightArmAngles( rArmAnglesNext );
+
+    Vector6d speeds;
+    speeds << 0.75, 0.75, 0.75, 0.75, 0.75, 0.75;
+    
+    hubo.setLeftArmNomSpeeds( speeds );
+    hubo.setRightArmNomSpeeds( speeds );
+    speeds *= 0.4/0.75;
+
+    hubo.setLeftArmNomAcc( speeds );
+    hubo.setRightArmNomAcc( speeds );
+
+    hubo.sendControls();
 
     // While the norm of the right arm angles is greater than 0.075
     // keep waiting for arm to get to desired position
@@ -181,7 +179,7 @@ int main(int argc, char **argv)
             hubo.huboArmIK( lArmAnglesNext, lTransf, lArmAnglesCurrent, LEFT );
             hubo.huboArmIK( rArmAnglesNext, rTransf, rArmAnglesCurrent, RIGHT );
 
-            // compute change in joint angles
+ /*           // compute change in joint angles
             dqLeft = (lArmAnglesNext - lArmAnglesCurrent).cwiseAbs();
             dqLeft = dqLeft / dqLeft.maxCoeff();
             dqRight = (rArmAnglesNext - rArmAnglesCurrent).cwiseAbs();
@@ -192,6 +190,7 @@ int main(int argc, char **argv)
             hubo.setRightArmNomAcc(armNomAcc.cwiseProduct(dqRight));
             hubo.setLeftArmNomSpeeds(armNomVel.cwiseProduct(dqLeft));
             hubo.setRightArmNomSpeeds(armNomVel.cwiseProduct(dqRight));
+*/
 
             // set and get joint angles
             if( left==true )
