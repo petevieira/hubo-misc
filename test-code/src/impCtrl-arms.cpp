@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     Eigen::Vector2d dqLsy(0,0);
     Eigen::Vector2d dqReb(0,0);
     Eigen::Vector2d dqRsy(0,0);
-    double a=3.5, v=2.5;
+    double a=3.0, v=3.0;
 
     // Define starting joint angles for the arms 
     lArmAnglesNext << 0, 0, 0, 0, 0, 0;
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     double MdRx = hubo.getRightHandMx();
     double MdRy = hubo.getRightHandMy();
     // double FdRz = hubo.getRightHandFz(); // added by sungmoon 4/2/2013 --> RightHandFz not defined in Hubo-Control
-    double qNew = 0.0;
+    Eigen::Vector3d qNew(0.0, 0.0, 0.0);
 
     // get current joint angles
     lebDesired = hubo.getJointAngle(LEB);
@@ -153,29 +153,33 @@ int main(int argc, char **argv)
             if( left==true )
             {
                 // Y-Moment (Elbow)
-                qNew = 0.0;
+                qNew.setZero();
                 dMy = -hubo.getLeftHandMx() - MdLy;
                 qNew = impedanceController(dqLeb, dMy, lebDesired, dt);
-                hubo.setJointAngle( LEB, qNew, false );
+                hubo.setJointAngle( LEB, qNew(0), false );
+               // hubo.setJointNominalSpeed(LEB*v, qNew(1));
+                //hubo.setJointNominalAcceleration(LEB*a, qNew(2));
                 // X-Moment (Shoulder Yaw)
-                qNew = 0.0;
+                qNew.setZero();
                 dMx = hubo.getLeftHandMy() - MdLx;
                 qNew = impedanceController(dqLsy, dMx, lsyDesired, dt);
-                hubo.setJointAngle( LSY, qNew, false );
+                hubo.setJointAngle( LSY, qNew(0), false );
+                //hubo.setJointNominalSpeed(LSY*v, qNew(1));
+                //hubo.setJointNominalAcceleration(LSY*a, qNew(2));
             }
 
             if( right==true )
             {
                 // Y-Moment (elbow)
-                qNew = 0.0;
+                qNew.setZero();
                 dMy = hubo.getRightHandMy() - MdRy;
                 qNew = impedanceController(dqReb, dMy, rebDesired, dt);
-                hubo.setJointAngle( REB, qNew, false );
+                hubo.setJointAngle( REB, qNew(0), false );
                 // X-Moment (Shoulder yaw)
-                qNew = 0.0;
+                qNew.setZero();
                 dMx = hubo.getRightHandMx() - MdRx;
                 qNew = impedanceController(dqRsy, dMx, rsyDesired, dt);
-                hubo.setJointAngle( RSY, qNew, false);
+                hubo.setJointAngle( RSY, qNew(0), false);
             }
 
             // send control references

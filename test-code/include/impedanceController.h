@@ -15,8 +15,8 @@ Eigen::Vector2d impedanceEq(Eigen::Vector2d dq, double dM)
 {
     double M, Q, K; // best numbers so far: M=0.008, Q=0.4, K=7.0
     M = .008; // user set inertia (kg)
-    Q = 1.5; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
-    K = .5; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
+    Q = .4; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
+    K = 7; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
 
     // state space rep.
     Eigen::Vector2d dqDot;
@@ -41,7 +41,7 @@ Eigen::Vector2d impedanceEq(Eigen::Vector2d dq, double dM)
  * @return: returns the delta_q (joint angle q and joint
  *          velocity dq 
 */
-void rk4(Eigen::Vector2d &dq, double dM, double dt )
+double rk4(Eigen::Vector2d &dq, double dM, double dt )
 {
     Eigen::Vector2d k1(0,0), k2(0,0), k3(0,0), k4(0,0); // runge-kutta  increments
 
@@ -53,6 +53,7 @@ void rk4(Eigen::Vector2d &dq, double dM, double dt )
 
     // compute new delta q
     dq = dq + dt*(k1 + 2*k2 + 2*k3 + k4)/6;
+    return k1(1);
 };
 
 /**
@@ -61,12 +62,14 @@ void rk4(Eigen::Vector2d &dq, double dM, double dt )
  *         and adjusts it to achieve desired moment about the ankles
  * @return: no return value. it adjust the desired joint angles by reference
 */
-double impedanceController(Eigen::Vector2d &dq, double dM, double angle, double dt)
+Eigen::Vector3d impedanceController(Eigen::Vector2d &dq, double dM, double angle, double dt)
 {
-    double qNew;
+    Eigen::Vector3d qNew;
 
-    rk4(dq, dM, dt); // pass in dq(n) and get out dq(n+1)
-    qNew = angle + dq(0); // qd(n+1) + (qNew(n+1) - qd(n+1))
+    double qDdot = rk4(dq, dM, dt); // pass in dq(n) and get out dq(n+1)
+    qNew(0) = angle + dq(0); // qd(n+1) + (qNew(n+1) - qd(n+1))
+    qNew(1) = dq(1);
+    qNew(2) = qDdot;
     return qNew;
 };
 

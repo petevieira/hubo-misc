@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 ctrllibs = -lm -lach -lc -lhuboctrl -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = impCtrl-arms impCtrl-legs fastrak-arms fastrak-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
+bin_PROGRAMS = sensors moveLimbs impCtrl-arms impCtrl-legs fastrak-arms fastrak-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
 
 include_HEADERS = include/Fastrak.h
 
@@ -24,8 +24,8 @@ fastrak_legs_LDADD = $(ctrllibs) libfastrak.la
 legIKTest_SOURCES = src/legIKTest.cpp
 legIKTest_LDADD = $(ctrllibs)
 
-oneLeg_SOURCES = src/oneLeg.cpp
-oneLeg_LDADD = $(ctrllibs)
+moveLimbs_SOURCES = src/moveLimbs.cpp
+moveLimbs_LDADD = $(ctrllibs)
 
 sensors_SOURCES = src/sensors.cpp
 sensors_LDADD = $(ctrllibs)

@@ -28,7 +28,6 @@ void Collision_Checker::checkSelfCollision(Eigen::Isometry3d &goal) {
     if (dist < collisionLimit)
     {
         std::cout << "Goal of " << "(" << x << "," << y << ")" << " causes a collision\n";
-        printf("\a");
         // adjust x and y to be on at the point on the collision boundary
         // on the opposite side of x,y from the origin
         double scale = sqrt(collisionLimit) / sqrt(dist);
