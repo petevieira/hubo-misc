@@ -11,7 +11,7 @@ Collision_Checker::~Collision_Checker()
 
 void Collision_Checker::initCollisionChecker()
 {
-    xMinor = 0.23; // minor axis parameter for collision boundary ellipse
+    xMinor = 0.26; // minor axis parameter for collision boundary ellipse
     yMajor = 0.29; // major axis parameter for collision boundary ellipse
     collisionLimit = 1.0; // distance to point on ellipse
 }
