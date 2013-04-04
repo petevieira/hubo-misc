@@ -15,7 +15,7 @@ fastrak_balance_LDADD = $(ctrllibs) libfastrak.la
 fastrak_dremelIK_SOURCES = src/fastrak-dremelIK.cpp
 fastrak_dremelIK_LDADD = $(ctrllibs) libfastrak.la
 
-fastrak_arms_SOURCES = src/fastrak-arms.cpp
+fastrak_arms_SOURCES = src/fastrak-arms.cpp src/Collision_Checker.cpp
 fastrak_arms_LDADD = $(ctrllibs) libfastrak.la
 
 fastrak_legs_SOURCES = src/fastrak-legs.cpp

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <getopt.h>
 #include "Fastrak.h"
+#include "Collision_Checker.h"
 
 /**
  * Prints out how to run this program
@@ -75,6 +76,9 @@ int main(int argc, char **argv)
     // Create Hubo_Control object
     Hubo_Control hubo;
 //    Hubo_Control hubo("fastrak-arms");
+
+    // Create Collision_Checker object
+    Collision_Checker collisionChecker;
 
     // Create Fastrak object
     Fastrak fastrak;
@@ -175,22 +179,13 @@ int main(int argc, char **argv)
             lTransf.rotate(lRot);
             rTransf.rotate(rRot);
 
+            // check for self collision
+            collisionChecker.checkSelfCollision(lTransf);
+            collisionChecker.checkSelfCollision(rTransf);
+
             // get joint angles corresponding to transformations
             hubo.huboArmIK( lArmAnglesNext, lTransf, lArmAnglesCurrent, LEFT );
             hubo.huboArmIK( rArmAnglesNext, rTransf, rArmAnglesCurrent, RIGHT );
-
- /*           // compute change in joint angles
-            dqLeft = (lArmAnglesNext - lArmAnglesCurrent).cwiseAbs();
-            dqLeft = dqLeft / dqLeft.maxCoeff();
-            dqRight = (rArmAnglesNext - rArmAnglesCurrent).cwiseAbs();
-            dqRight = dqRight / dqRight.maxCoeff();
-
-            // scale nominal joint accelerations and speeds 
-            hubo.setLeftArmNomAcc(armNomAcc.cwiseProduct(dqLeft));
-            hubo.setRightArmNomAcc(armNomAcc.cwiseProduct(dqRight));
-            hubo.setLeftArmNomSpeeds(armNomVel.cwiseProduct(dqLeft));
-            hubo.setRightArmNomSpeeds(armNomVel.cwiseProduct(dqRight));
-*/
 
             // set and get joint angles
             if( left==true )
