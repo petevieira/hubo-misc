@@ -103,8 +103,10 @@ int main(int argc, char **argv)
     fastrak.getPose( rTransInitial, rRotInitial, rightSensor, false );
 
     // Define starting joint angles for the arms 
-    lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0;
-    rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0;
+    if (left == true)
+        lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0;
+    if (right == true)
+        rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0;
 
     // Set the arm joint angles and send commands to the control daemon
     hubo.setLeftArmAngles( lArmAnglesNext );
