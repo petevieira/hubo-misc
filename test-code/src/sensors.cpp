@@ -5,7 +5,7 @@
 int main(int argc, char **argv)
 {
     Hubo_Control hubo;
-    int i=0, imax=40;
+    int i=0, imax=30;
 
     double ptime, dt;
     double initialTime = hubo.getTime();
@@ -22,8 +22,10 @@ int main(int argc, char **argv)
 
             if( i==imax )
             {
-                std::cout << "WST: " << hubo.getJointAngle(REB) 
-                          << "\tRF1: " << hubo.getJointAngle(RF1)
+                std::cout << "IMUx: " << hubo.getAngleX() 
+                          << "\nIMUy: " << hubo.getAngleY()
+                          << "\nRightHandMx: " << hubo.getRightHandMx()
+                          << "\nRightHandMy: " << hubo.getRightHandMy()
                           << std::endl;
             }
         }
