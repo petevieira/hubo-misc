@@ -1,25 +1,16 @@
-#include <Hubo_Tech.h>
-#include <hubo.h>
+#include <Hubo_Control.h>
 #include <iostream>
 
  
 int main(int argc, char **argv)
 {
-    Hubo_Tech hubo;
-    int i=0, imax=20;
-
-    ach_channel_t chan_hubo_state;
-    struct hubo_state H_state;
-    memset( &H_state, 0, sizeof(H_state) );
-
-    // open hubo state
-    int r = ach_open(&chan_hubo_state, HUBO_CHAN_STATE_NAME, NULL);
+    Hubo_Control hubo;
+    int i=0, imax=40;
 
     double ptime, dt;
     double initialTime = hubo.getTime();
     ptime = hubo.getTime();
-    size_t fs;
-    while(true)
+    while(!daemon_sig_quit)
     {
         hubo.update();
 
@@ -29,12 +20,10 @@ int main(int argc, char **argv)
         {
             i++; if(i>imax) i=0;
 
-            r = ach_get( &chan_hubo_state, &H_state, sizeof(H_state), &fs, NULL, ACH_O_LAST );
-
             if( i==imax )
             {
-                std::cout << "REB Angle Ref (rad): " << hubo.getJointAngle(REB) 
-                          << "\tREB Angle State (rad): " << H_state.joint[REB].pos
+                std::cout << "WST: " << hubo.getJointAngle(REB) 
+                          << "\tRF1: " << hubo.getJointAngle(RF1)
                           << std::endl;
             }
         }
