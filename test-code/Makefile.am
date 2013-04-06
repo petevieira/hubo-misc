@@ -5,9 +5,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 ctrllibs = -lm -lach -lc -lhuboctrl -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = sensors moveLimbs impCtrl-arms impCtrl-legs fastrak-arms fastrak-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
+bin_PROGRAMS = sensors impCtrl-arms impCtrl-legs teleop-arms fastrak-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
 
-include_HEADERS = include/Fastrak.h
+include_HEADERS = include/Teleop.h
 
 fastrak_balance_SOURCES = src/fastrak-balance.cpp
 fastrak_balance_LDADD = $(ctrllibs) libfastrak.la
@@ -15,17 +15,14 @@ fastrak_balance_LDADD = $(ctrllibs) libfastrak.la
 fastrak_dremelIK_SOURCES = src/fastrak-dremelIK.cpp
 fastrak_dremelIK_LDADD = $(ctrllibs) libfastrak.la
 
-fastrak_arms_SOURCES = src/fastrak-arms.cpp src/Collision_Checker.cpp
-fastrak_arms_LDADD = $(ctrllibs) libfastrak.la
+teleop_arms_SOURCES = src/teleop-arms.cpp src/Collision_Checker.cpp
+teleop_arms_LDADD = $(ctrllibs) libteleop.la
 
 fastrak_legs_SOURCES = src/fastrak-legs.cpp
 fastrak_legs_LDADD = $(ctrllibs) libfastrak.la
 
 legIKTest_SOURCES = src/legIKTest.cpp
 legIKTest_LDADD = $(ctrllibs)
-
-moveLimbs_SOURCES = src/moveLimbs.cpp
-moveLimbs_LDADD = $(ctrllibs)
 
 sensors_SOURCES = src/sensors.cpp
 sensors_LDADD = $(ctrllibs)
@@ -39,7 +36,7 @@ impCtrl_arms_LDADD = $(ctrllibs)
 impCtrl_legs_SOURCES = src/impCtrl-legs.cpp
 impCtrl_legs_LDADD = $(ctrllibs)
 
-fastrakdir = /usr/lib
-fastrak_LTLIBRARIES = libfastrak.la
-libfastrak_la_SOURCES = src/Fastrak.cpp
-libfastrak_la_LDFLAGS = -module -avoid-version -shared
+teleopdir = /usr/lib
+teleop_LTLIBRARIES = libteleop.la
+libteleop_la_SOURCES = src/Teleop.cpp
+libteleop_la_LDFLAGS = -module -avoid-version -shared
