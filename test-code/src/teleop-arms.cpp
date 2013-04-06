@@ -103,10 +103,10 @@ int main(int argc, char **argv)
     // local variables
     Vector6d rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr, armNomAcc, armNomVel, dqLeft, dqRight;
     Vector6d lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
-    Vector3d lArmTrans, ltransEE, lTransInitial, lArmTeleop;
-    Vector3d rArmTrans, rtransEE, rTransInitial, rArmTeleop; 
-    Eigen::Matrix3d lRotInitial, rRotInitial, lRot, rRot;
-    Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent;
+    Vector3d lSensorChange, lHandOrigin, lSensorOrigin, lSensorPos;
+    Vector3d rSensorChange, rHandOrigin, rSensorOrigin, rSensorPos; 
+    Eigen::Matrix3d lRotInitial, rRotInitial, lSensorRot, rSensorRot;
+    Eigen::Isometry3d lHandInitialPose, rHandInitialPose, lHandPose, rHandPose, lHandCurrent, rHandCurrent;
     Vector6d speeds; speeds << 0.75, 0.75, 0.75, 0.75, 0.75, 0.75;
     Vector6d accels; accels << 0.40, 0.40, 0.40, 0.40, 0.40, 0.40;
     int counter=0, counterMax=40;
@@ -173,11 +173,11 @@ int main(int argc, char **argv)
     Collision_Checker collisionChecker; // Create Collision_Checker object
 
     // Create Teleop object
-    Teleop teleop("liberty"); // Create Teleop object
+    Teleop teleop(teleopDeviceName); // Create Teleop object
 
     if (left == true) // if using the left arm
     {
-        teleop.getPose( lTransInitial, lRotInitial, leftSensorNumber, true ); // get initial sensor pose
+        teleop.getPose( lSensorOrigin, lRotInitial, leftSensorNumber, true ); // get initial sensor pose
         lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0; // Define left arm intial joint angles
         hubo.setLeftArmAngles( lArmAnglesNext ); // Set the left arm joint angles
         hubo.setLeftArmNomSpeeds( speeds ); // Set left arm nominal joint speeds
@@ -186,35 +186,35 @@ int main(int argc, char **argv)
 
     if (right == true) // if using the right arm
     {
-        teleop.getPose( rTransInitial, rRotInitial, rightSensorNumber, false ); // get initial sensor pose
+        teleop.getPose( rSensorOrigin, rRotInitial, rightSensorNumber, false ); // get initial sensor pose
         rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0; // Define right arm initial joint angles
         hubo.setRightArmAngles( rArmAnglesNext ); // Set right arm joint angles
         hubo.setRightArmNomSpeeds( speeds ); // Set right arm nominal joint speeds
         hubo.setRightArmNomAcc( accels ); // Set right arm nomimal joint accelerations
     }
 
-    if(send == true)
+    if(send == true) // if user wants to send commands
         hubo.sendControls(); // send commands to the control daemon
 
     // While the norm of the right arm angles is greater than 0.075
     // keep waiting for arm to get to desired position
     while ((lArmAnglesNext - checkl).norm() > 0.075 && (rArmAnglesNext - checkr).norm() > 0.075)
     {
-        hubo.update(); // Get latest data from ach channels
         hubo.getLeftArmAngles(checkl); // Get current left arm joint angles
         hubo.getRightArmAngles(checkr); // Get current right arm joint angles
+        hubo.update(); // Get latest data from ach channels
     }
 
     if(left == true)
     {
-        hubo.huboArmFK(lcurrEE, lArmAnglesNext, LEFT); // Get left hand pose
-        ltransEE = lcurrEE.translation(); // Set relative zero for hand location
+        hubo.huboArmFK(lHandInitialPose, lArmAnglesNext, LEFT); // Get left hand pose
+        lHandOrigin = lHandInitialPose.translation(); // Set relative zero for hand location
     }
 
     if(right == true)
     {
-        hubo.huboArmFK(rcurrEE, rArmAnglesNext, RIGHT); // Get right hand pose
-        rtransEE = rcurrEE.translation(); // Set relative zero for hand location
+        hubo.huboArmFK(rHandInitialPose, rArmAnglesNext, RIGHT); // Get right hand pose
+        rHandOrigin = rHandInitialPose.translation(); // Set relative zero for hand location
     }
 
     while(!daemon_sig_quit)
@@ -230,13 +230,13 @@ int main(int argc, char **argv)
             {
                 hubo.getLeftArmAngles(lArmAnglesCurrent); // get left arm joint angles
                 hubo.huboArmFK(lHandCurrent, lArmAnglesCurrent, LEFT); // get left hand pose
-                teleop.getPose(lArmTeleop, lRot, leftSensorNumber, true); // get teleop data
-                lArmTrans = lArmTeleop - lTransInitial; // compute teleop relative translation
-                lTransf = Eigen::Matrix4d::Identity(); // create 4d identity matrix
-                lTransf.translate(lArmTrans + ltransEE); // pretranslate relative translation
-                lTransf.rotate(lRot); // add rotation to top-left of TF matrix
-                collisionChecker.checkSelfCollision(lTransf); // check for self-collision
-                hubo.huboArmIK( lArmAnglesNext, lTransf, lArmAnglesCurrent, LEFT ); // get joint angles for desired TF
+                teleop.getPose(lSensorPos, lSensorRot, leftSensorNumber, true); // get teleop data
+                lSensorChange = lSensorPos - lSensorOrigin; // compute teleop relative translation
+                lHandPose = Eigen::Matrix4d::Identity(); // create 4d identity matrix
+                lHandPose.translate(lSensorChange + lHandOrigin); // pretranslate relative translation
+                lHandPose.rotate(lSensorRot); // add rotation to top-left of TF matrix
+                collisionChecker.checkSelfCollision(lHandPose); // check for self-collision
+                hubo.huboArmIK( lArmAnglesNext, lHandPose, lArmAnglesCurrent, LEFT ); // get joint angles for desired TF
                 hubo.setLeftArmAngles( lArmAnglesNext, false ); // set joint angles
                 hubo.getLeftArmAngles( lActualAngles ); // get current joint angles
             }
@@ -244,13 +244,13 @@ int main(int argc, char **argv)
             if( right==true ) // if using right arm
                 hubo.getRightArmAngles(rArmAnglesCurrent); // get right arm joint angles
                 hubo.huboArmFK(rHandCurrent, rArmAnglesCurrent, RIGHT); // get right hand pose
-                teleop.getPose(rArmTeleop, rRot, rightSensorNumber, false); // get teleop data
-                rArmTrans = rArmTeleop - rTransInitial; // compute teleop relative translation
-                rTransf = Eigen::Matrix4d::Identity(); // create 4d identity matrix
-                rTransf.translate(rArmTrans + rtransEE); // pretranslation by relative translation
-                rTransf.rotate(rRot); // add rotation to top-left corner of TF matrix
-                collisionChecker.checkSelfCollision(rTransf); // check for self-collision
-                hubo.huboArmIK( rArmAnglesNext, rTransf, rArmAnglesCurrent, RIGHT ); // get joint angles for desired TF
+                teleop.getPose(rSensorPos, rSensorRot, rightSensorNumber, false); // get teleop data
+                rSensorChange = rSensorPos - rSensorOrigin; // compute teleop relative translation
+                rHandPose = Eigen::Matrix4d::Identity(); // create 4d identity matrix
+                rHandPose.translate(rSensorChange + rHandOrigin); // pretranslation by relative translation
+                rHandPose.rotate(rSensorRot); // add rotation to top-left corner of TF matrix
+                collisionChecker.checkSelfCollision(rHandPose); // check for self-collision
+                hubo.huboArmIK( rArmAnglesNext, rHandPose, rArmAnglesCurrent, RIGHT ); // get joint angles for desired TF
                 hubo.setRightArmAngles( rArmAnglesNext, false ); // set joint angles
                 hubo.getRightArmAngles( rActualAngles ); // get current joint angles
             }
@@ -261,10 +261,10 @@ int main(int argc, char **argv)
             if( counter>=counterMax && print==true ) // if user wants output, print output every imax cycles
             {
                 std::cout
-                          << "Teleop Position Lt(m): " << lArmTrans.transpose()
-                          << "\nTeleop Rotation Lt: \n" << lRot
-                          << "\nTeleop Position Rt(m): " << rArmTrans.transpose()
-                          << "\nTeleop Rotation Rt: \n" << rRot
+                          << "Teleop Position Lt(m): " << lSensorChange.transpose()
+                          << "\nTeleop Rotation Lt: \n" << lSensorRot
+                          << "\nTeleop Position Rt(m): " << rSensorChange.transpose()
+                          << "\nTeleop Rotation Rt: \n" << rSensorRot
                           << "\nLeft  Arm Actual Angles (rad): " << lActualAngles.transpose()
                           << "\nLeft  Arm Desired Angles(rad): " << lArmAnglesNext.transpose()
                           << "\nRight Arm Actual Angles (rad): " << rActualAngles.transpose()
