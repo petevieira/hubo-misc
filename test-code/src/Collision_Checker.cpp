@@ -16,8 +16,8 @@ void Collision_Checker::initCollisionChecker()
     collisionLimit = 1.0; // distance to point on ellipse
 }
 
-void Collision_Checker::checkSelfCollision(Eigen::Isometry3d &goal) {
-
+void Collision_Checker::checkSelfCollision(Eigen::Isometry3d &goal)
+{
     double x = goal(0,3); // get x position of goal
     double y = goal(1,3); // get y position of goal
 
@@ -38,4 +38,3 @@ void Collision_Checker::checkSelfCollision(Eigen::Isometry3d &goal) {
         goal(1,3) = y;
     }
 }
-
