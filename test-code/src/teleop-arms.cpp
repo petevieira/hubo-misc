@@ -111,6 +111,7 @@ int main(int argc, char **argv)
     Vector6d accels; accels << 0.40, 0.40, 0.40, 0.40, 0.40, 0.40;
     int counter=0, counterMax=40;
     double dt, ptime;
+    bool updateRight;
 
     // command line long options
     const struct option long_options[] = 
@@ -186,7 +187,8 @@ int main(int argc, char **argv)
 
     if (right == true) // if using the right arm
     {
-        teleop.getPose( rSensorOrigin, rRotInitial, rightSensorNumber, false ); // get initial sensor pose
+        if(left == true) updateRight = false; else updateRight = true;
+        teleop.getPose( rSensorOrigin, rRotInitial, rightSensorNumber, updateRight ); // get initial sensor pose
         rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0; // Define right arm initial joint angles
         hubo.setRightArmAngles( rArmAnglesNext ); // Set right arm joint angles
         hubo.setRightArmNomSpeeds( speeds ); // Set right arm nominal joint speeds
@@ -242,9 +244,11 @@ int main(int argc, char **argv)
             }
 
             if( right==true ) // if using right arm
+            {
+                if(left == true) updateRight = false; else updateRight = true;
                 hubo.getRightArmAngles(rArmAnglesCurrent); // get right arm joint angles
                 hubo.huboArmFK(rHandPoseCurrent, rArmAnglesCurrent, RIGHT); // get right hand pose
-                teleop.getPose(rSensorPos, rSensorRot, rightSensorNumber, false); // get teleop data
+                teleop.getPose(rSensorPos, rSensorRot, rightSensorNumber, updateRight); // get teleop data
                 rSensorChange = rSensorPos - rSensorOrigin; // compute teleop relative translation
                 rHandPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
                 rHandPoseDesired.translate(rSensorChange + rHandOrigin); // pretranslation by relative translation
