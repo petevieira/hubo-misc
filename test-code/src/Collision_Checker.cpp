@@ -11,7 +11,7 @@ Collision_Checker::~Collision_Checker()
 
 void Collision_Checker::initCollisionChecker()
 {
-    xMinor = 0.26; // minor axis parameter for collision boundary ellipse
+    xMinor = 0.25; // minor axis parameter for collision boundary ellipse
     yMajor = 0.29; // major axis parameter for collision boundary ellipse
     collisionLimit = 1.0; // distance to point on ellipse
 }
@@ -27,7 +27,7 @@ void Collision_Checker::checkSelfCollision(Eigen::Isometry3d &goal)
     // check if dist is inside boundary ellispe defined by xMinor and yMajor
     if (dist < collisionLimit)
     {
-        std::cout << "Goal of " << "(" << x << "," << y << ")" << " causes a collision\n";
+        std::cout << "COLLISION!!\n\tGoal of " << "(" << x << "," << y << ")" << " causes a collision\n";
         // adjust x and y to be on at the point on the collision boundary
         // on the opposite side of x,y from the origin
         double scale = sqrt(collisionLimit) / sqrt(dist);
