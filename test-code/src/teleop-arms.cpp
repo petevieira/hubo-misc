@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     Vector3d lSensorChange, lHandOrigin, lSensorOrigin, lSensorPos;
     Vector3d rSensorChange, rHandOrigin, rSensorOrigin, rSensorPos; 
     Eigen::Matrix3d lRotInitial, rRotInitial, lSensorRot, rSensorRot;
-    Eigen::Isometry3d lHandInitialPose, rHandInitialPose, lHandPose, rHandPose, lHandCurrent, rHandCurrent;
+    Eigen::Isometry3d lHandInitialPose, rHandInitialPose, lHandPoseDesired, rHandPoseDesired, lHandPoseCurrent, rHandPoseCurrent;
     Vector6d speeds; speeds << 0.75, 0.75, 0.75, 0.75, 0.75, 0.75;
     Vector6d accels; accels << 0.40, 0.40, 0.40, 0.40, 0.40, 0.40;
     int counter=0, counterMax=40;
@@ -229,28 +229,28 @@ int main(int argc, char **argv)
             if(left == true) // if using left arm
             {
                 hubo.getLeftArmAngles(lArmAnglesCurrent); // get left arm joint angles
-                hubo.huboArmFK(lHandCurrent, lArmAnglesCurrent, LEFT); // get left hand pose
+                hubo.huboArmFK(lHandPoseCurrent, lArmAnglesCurrent, LEFT); // get left hand pose
                 teleop.getPose(lSensorPos, lSensorRot, leftSensorNumber, true); // get teleop data
                 lSensorChange = lSensorPos - lSensorOrigin; // compute teleop relative translation
-                lHandPose = Eigen::Matrix4d::Identity(); // create 4d identity matrix
-                lHandPose.translate(lSensorChange + lHandOrigin); // pretranslate relative translation
-                lHandPose.rotate(lSensorRot); // add rotation to top-left of TF matrix
-                collisionChecker.checkSelfCollision(lHandPose); // check for self-collision
-                hubo.huboArmIK( lArmAnglesNext, lHandPose, lArmAnglesCurrent, LEFT ); // get joint angles for desired TF
+                lHandPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
+                lHandPoseDesired.translate(lSensorChange + lHandOrigin); // pretranslate relative translation
+                lHandPoseDesired.rotate(lSensorRot); // add rotation to top-left of TF matrix
+                collisionChecker.checkSelfCollision(lHandPoseDesired); // check for self-collision
+                hubo.huboArmIK( lArmAnglesNext, lHandPoseDesired, lArmAnglesCurrent, LEFT ); // get joint angles for desired TF
                 hubo.setLeftArmAngles( lArmAnglesNext, false ); // set joint angles
                 hubo.getLeftArmAngles( lActualAngles ); // get current joint angles
             }
 
             if( right==true ) // if using right arm
                 hubo.getRightArmAngles(rArmAnglesCurrent); // get right arm joint angles
-                hubo.huboArmFK(rHandCurrent, rArmAnglesCurrent, RIGHT); // get right hand pose
+                hubo.huboArmFK(rHandPoseCurrent, rArmAnglesCurrent, RIGHT); // get right hand pose
                 teleop.getPose(rSensorPos, rSensorRot, rightSensorNumber, false); // get teleop data
                 rSensorChange = rSensorPos - rSensorOrigin; // compute teleop relative translation
-                rHandPose = Eigen::Matrix4d::Identity(); // create 4d identity matrix
-                rHandPose.translate(rSensorChange + rHandOrigin); // pretranslation by relative translation
-                rHandPose.rotate(rSensorRot); // add rotation to top-left corner of TF matrix
-                collisionChecker.checkSelfCollision(rHandPose); // check for self-collision
-                hubo.huboArmIK( rArmAnglesNext, rHandPose, rArmAnglesCurrent, RIGHT ); // get joint angles for desired TF
+                rHandPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
+                rHandPoseDesired.translate(rSensorChange + rHandOrigin); // pretranslation by relative translation
+                rHandPoseDesired.rotate(rSensorRot); // add rotation to top-left corner of TF matrix
+                collisionChecker.checkSelfCollision(rHandPoseDesired); // check for self-collision
+                hubo.huboArmIK( rArmAnglesNext, rHandPoseDesired, rArmAnglesCurrent, RIGHT ); // get joint angles for desired TF
                 hubo.setRightArmAngles( rArmAnglesNext, false ); // set joint angles
                 hubo.getRightArmAngles( rActualAngles ); // get current joint angles
             }
