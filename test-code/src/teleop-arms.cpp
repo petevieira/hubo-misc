@@ -237,7 +237,7 @@ int main(int argc, char **argv)
                 lHandPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
                 lHandPoseDesired.translate(lSensorChange + lHandOrigin); // pretranslate relative translation
                 lHandPoseDesired.rotate(lSensorRot); // add rotation to top-left of TF matrix
-                collisionChecker.checkSelfCollision(lHandPoseDesired); // check for self-collision
+                collisionChecker.checkArmSelfCollision(lHandPoseDesired); // check for self-collision
                 hubo.huboArmIK( lArmAnglesNext, lHandPoseDesired, lArmAnglesCurrent, LEFT ); // get joint angles for desired TF
                 hubo.setLeftArmAngles( lArmAnglesNext, false ); // set joint angles
                 hubo.getLeftArmAngles( lActualAngles ); // get current joint angles
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
                 rHandPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
                 rHandPoseDesired.translate(rSensorChange + rHandOrigin); // pretranslation by relative translation
                 rHandPoseDesired.rotate(rSensorRot); // add rotation to top-left corner of TF matrix
-                collisionChecker.checkSelfCollision(rHandPoseDesired); // check for self-collision
+                collisionChecker.checkArmSelfCollision(rHandPoseDesired); // check for self-collision
                 hubo.huboArmIK( rArmAnglesNext, rHandPoseDesired, rArmAnglesCurrent, RIGHT ); // get joint angles for desired TF
                 hubo.setRightArmAngles( rArmAnglesNext, false ); // set joint angles
                 hubo.getRightArmAngles( rActualAngles ); // get current joint angles

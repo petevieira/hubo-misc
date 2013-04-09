@@ -29,7 +29,7 @@ public:
      * If the goal location is inside the boundary ellipse defined by parameters a (minor axis)
      * and b (major axis) then the x,y location gets mapped to the surface of the ellipse
     */
-    void checkSelfCollision(Eigen::Isometry3d &goal);
+    void checkArmSelfCollision(Eigen::Isometry3d &goal);
 
 private:
 
