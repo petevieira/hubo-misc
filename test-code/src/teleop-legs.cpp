@@ -2,8 +2,10 @@
 #include <iostream>
 #include <fstream>
 #include <getopt.h>
-#include "Teleop.h"
 #include "Collision_Checker.h"
+#include "Teleop.h"
+
+static const double FOOT_WIDTH = .130; // Width of Hubo's foot in meters
 
 /**
  * @function: usage(std::ostream& ostr)
@@ -11,23 +13,23 @@
 */
 void usage(std::ostream& ostr)
 {
-    ostr <<
+    ostr << 
         "USAGE:\n"
         "\n"
-        "teleop-arms [OPTIONS] \n"
+        "teleop-legs [OPTIONS] \n"
         "\n"
         "EXAMPLES:\n"
         "\n"
-        "./teleop-arms -l -r5           Control the left arm using the default sensor number and right arm using sensor 5.\n"
-        "./teleop-arms -l1 -r2          Control both arms using sensor 1 for the left arm and sensor 2 for the right arm.\n"
-        "./teleop-arms --left           Control the left arm using the default sensor number.\n"
-        "./teleop-arms --right=4        Control the right arm using sensor number 4.\n"
-        "./teleop-arms -l -r -dliberty  Control both arms using default sensor numbers and using the \"liberty\" device.\n"
+        "./teleop-legs -l -r5           Control the left leg using the default sensor number and right leg using sensor 5.\n"
+        "./teleop-legs -l1 -r2          Control both legs using sensor 1 for the left leg and sensor 2 for the right leg.\n"
+        "./teleop-legs --left           Control the left leg using the default sensor number.\n"
+        "./teleop-legs --right=4        Control the right leg using sensor number 4.\n"
+        "./teleop-legs -l -r -dliberty  Control both legs using default sensor numbers and using the \"liberty\" device.\n"
         "\n"
         "OPTIONS:\n"
         "\n"
-        "  -lSENSOR_NUMBER, --left=SENSOR_NUMBER    Control left arm using sensor SENSOR_NUMBER (default is 1).\n"
-        "  -rSENSOR_NUMBER, --right=SENSOR_NUMBER   Control right arm using sensor SENSOR_NUMBER (default is 2).\n"
+        "  -lSENSOR_NUMBER, --left=SENSOR_NUMBER    Control left leg using sensor SENSOR_NUMBER (Default is 3).\n"
+        "  -rSENSOR_NUMBER, --right=SENSOR_NUMBER   Control right leg using sensor SENSOR_NUMBER (Default is 4).\n"
         "  -n,              --nosend                Don't send commands to Hubo.\n"
         "  -dDEVICE_NAME,   --device=DEVICE_NAME    Sets the teleop device to use (optional)(default is \"liberty\").\n"
         "  -V,              --verbose               Show output.\n"
@@ -78,7 +80,7 @@ const char* getDeviceName(const char *s)
 /**
  * @function: main(int argc, char **argv)
  * @brief: Main function that loops reading the sensors and commanding
- * Hubo's arm joints based on the poses of the hands
+ * Hubo's arm joints based on the poses of the foots
 */
 int main(int argc, char **argv)
 {
@@ -94,23 +96,25 @@ int main(int argc, char **argv)
     bool right = false; // whether to set right arm angles
     bool print = false; // whether to print output or not
     bool send = true; // whether to send commands or not
-    int leftSensorNumberDefault = 1; // default left hand sensor number
-    int rightSensorNumberDefault = 2; // default right hand sensor number
-    int leftSensorNumber = leftSensorNumberDefault; // left hand sensor number
-    int rightSensorNumber = rightSensorNumberDefault; // right hand sensor number
+    int leftSensorNumberDefault = 3; // default left foot sensor number
+    int rightSensorNumberDefault = 4; // default right foot sensor number
+    int leftSensorNumber = leftSensorNumberDefault; // left foot sensor number
+    int rightSensorNumber = rightSensorNumberDefault; // right foot sensor number
     const char *teleopDeviceName = "liberty"; // name of teleop device
 
     // local variables
-    Vector6d rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr, armNomAcc, armNomVel, dqLeft, dqRight;
-    Vector6d lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
-    Vector3d lSensorChange, lHandOrigin, lSensorOrigin, lSensorPos;
-    Vector3d rSensorChange, rHandOrigin, rSensorOrigin, rSensorPos; 
+    Vector6d lActualAngles, lLegAnglesNext, lLegAnglesCurrent;
+    Vector6d rActualAngles, rLegAnglesNext, rLegAnglesCurrent;
+    Vector3d lFootOrigin, lSensorChange, lSensorOrigin, lSensorPos;
+    Vector3d rFootOrigin, rSensorChange, rSensorOrigin, rSensorPos; 
     Eigen::Matrix3d lRotInitial, rRotInitial, lSensorRot, rSensorRot;
-    Eigen::Isometry3d lHandInitialPose, rHandInitialPose, lHandPoseDesired, rHandPoseDesired, lHandPoseCurrent, rHandPoseCurrent;
+    Eigen::Isometry3d lFootInitialPose, lFootPoseCurrent, lFootPoseDesired;
+    Eigen::Isometry3d rFootInitialPose, rFootPoseCurrent, rFootPoseDesired;
     Vector6d speeds; speeds << 0.75, 0.75, 0.75, 0.75, 0.75, 0.75;
     Vector6d accels; accels << 0.40, 0.40, 0.40, 0.40, 0.40, 0.40;
-    int counter=0, counterMax=40;
+    double initialFootHeight = 0.1;
     double dt, ptime;
+    int counter=0, counterMax=50;
     bool updateRight;
 
     // command line long options
@@ -154,7 +158,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    // make sure the sensor numbers are not the same for both hands
+    // make sure the sensor numbers are not the same for both feet
     if(leftSensorNumber == rightSensorNumber)
     {
         if(left == true && right == true)
@@ -179,46 +183,38 @@ int main(int argc, char **argv)
     if (left == true) // if using the left arm
     {
         teleop.getPose( lSensorOrigin, lRotInitial, leftSensorNumber, true ); // get initial sensor pose
-        lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0; // Define left arm intial joint angles
-        hubo.setLeftArmAngles( lArmAnglesNext ); // Set the left arm joint angles
-        hubo.setLeftArmNomSpeeds( speeds ); // Set left arm nominal joint speeds
-        hubo.setLeftArmNomAcc( accels ); // Set left arm nominal joint accelerations
+        lLegAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0; // Define left arm intial joint angles
+        hubo.setLeftLegAngles( lLegAnglesNext ); // Set the left arm joint angles
+        hubo.setLeftLegNomSpeeds( speeds ); // Set left arm nominal joint speeds
+        hubo.setLeftLegNomAcc( accels ); // Set left arm nominal joint accelerations
     }
 
     if (right == true) // if using the right arm
     {
         if(left == true) updateRight = false; else updateRight = true;
         teleop.getPose( rSensorOrigin, rRotInitial, rightSensorNumber, updateRight ); // get initial sensor pose
-        rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0; // Define right arm initial joint angles
-        hubo.setRightArmAngles( rArmAnglesNext ); // Set right arm joint angles
-        hubo.setRightArmNomSpeeds( speeds ); // Set right arm nominal joint speeds
-        hubo.setRightArmNomAcc( accels ); // Set right arm nomimal joint accelerations
+        rLegAnglesNext << 0, .3, 0, -M_PI/2, 0, 0; // Define right arm initial joint angles
+        hubo.setRightLegAngles( rLegAnglesNext ); // Set right arm joint angles
+        hubo.setRightLegNomSpeeds( speeds ); // Set right arm nominal joint speeds
+        hubo.setRightLegNomAcc( accels ); // Set right arm nomimal joint accelerations
     }
 
     if(send == true) // if user wants to send commands
         hubo.sendControls(); // send commands to the control daemon
 
-    // While the norm of the right arm angles is greater than 0.075
-    // keep waiting for arm to get to desired position
-    while ((lArmAnglesNext - checkl).norm() > 0.075 && (rArmAnglesNext - checkr).norm() > 0.075)
-    {
-        hubo.getLeftArmAngles(checkl); // Get current left arm joint angles
-        hubo.getRightArmAngles(checkr); // Get current right arm joint angles
-        hubo.update(); // Get latest data from ach channels
-    }
-
     if(left == true)
     {
-        hubo.huboArmFK(lHandInitialPose, lArmAnglesNext, LEFT); // Get left hand pose
-        lHandOrigin = lHandInitialPose.translation(); // Set relative zero for hand location
+        hubo.huboLegFK(lFootInitialPose, lLegAnglesNext, LEFT); // Get left foot pose
+        lFootOrigin = lFootInitialPose.translation(); // Set relative zero for foot location
     }
 
     if(right == true)
     {
-        hubo.huboArmFK(rHandInitialPose, rArmAnglesNext, RIGHT); // Get right hand pose
-        rHandOrigin = rHandInitialPose.translation(); // Set relative zero for hand location
+        hubo.huboLegFK(rFootInitialPose, rLegAnglesNext, RIGHT); // Get right foot pose
+        rFootOrigin = rFootInitialPose.translation(); // Set relative zero for foot location
     }
 
+    // while the daemon is running
     while(!daemon_sig_quit)
     {
         hubo.update(); // Get latest state info from Hubo
@@ -230,33 +226,41 @@ int main(int argc, char **argv)
         {
             if(left == true) // if using left arm
             {
-                hubo.getLeftArmAngles(lArmAnglesCurrent); // get left arm joint angles
-                hubo.huboArmFK(lHandPoseCurrent, lArmAnglesCurrent, LEFT); // get left hand pose
+                hubo.getLeftLegAngles(lLegAnglesCurrent); // get left arm joint angles
+                hubo.huboLegFK(lFootPoseCurrent, lLegAnglesCurrent, LEFT); // get left foot pose
                 teleop.getPose(lSensorPos, lSensorRot, leftSensorNumber, true); // get teleop data
                 lSensorChange = lSensorPos - lSensorOrigin; // compute teleop relative translation
-                lHandPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
-                lHandPoseDesired.translate(lSensorChange + lHandOrigin); // pretranslate relative translation
-                lHandPoseDesired.rotate(lSensorRot); // add rotation to top-left of TF matrix
-                collisionChecker.checkSelfCollision(lHandPoseDesired); // check for self-collision
-                hubo.huboArmIK( lArmAnglesNext, lHandPoseDesired, lArmAnglesCurrent, LEFT ); // get joint angles for desired TF
-                hubo.setLeftArmAngles( lArmAnglesNext, false ); // set joint angles
-                hubo.getLeftArmAngles( lActualAngles ); // get current joint angles
+                lFootPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
+                lFootPoseDesired.translate(lSensorChange + lFootOrigin); // pretranslate relative translation
+                // make sure feet don't cross sagittal plane
+                if(lFootPoseDesired(1,3) - FOOT_WIDTH/2 < 0)
+                    lFootPoseDesired(1,3) = FOOT_WIDTH/2;
+
+                lFootPoseDesired.rotate(lSensorRot); // add rotation to top-left of TF matrix
+                collisionChecker.checkSelfCollision(lFootPoseDesired); // check for self-collision
+                hubo.huboLegIK( lLegAnglesNext, lFootPoseDesired, lLegAnglesCurrent, LEFT ); // get joint angles for desired TF
+                hubo.setLeftLegAngles( lLegAnglesNext, false ); // set joint angles
+                hubo.getLeftLegAngles( lActualAngles ); // get current joint angles
             }
 
             if( right==true ) // if using right arm
             {
                 if(left == true) updateRight = false; else updateRight = true;
-                hubo.getRightArmAngles(rArmAnglesCurrent); // get right arm joint angles
-                hubo.huboArmFK(rHandPoseCurrent, rArmAnglesCurrent, RIGHT); // get right hand pose
+                hubo.getRightLegAngles(rLegAnglesCurrent); // get right arm joint angles
+                hubo.huboLegFK(rFootPoseCurrent, rLegAnglesCurrent, RIGHT); // get right foot pose
                 teleop.getPose(rSensorPos, rSensorRot, rightSensorNumber, updateRight); // get teleop data
                 rSensorChange = rSensorPos - rSensorOrigin; // compute teleop relative translation
-                rHandPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
-                rHandPoseDesired.translate(rSensorChange + rHandOrigin); // pretranslation by relative translation
-                rHandPoseDesired.rotate(rSensorRot); // add rotation to top-left corner of TF matrix
-                collisionChecker.checkSelfCollision(rHandPoseDesired); // check for self-collision
-                hubo.huboArmIK( rArmAnglesNext, rHandPoseDesired, rArmAnglesCurrent, RIGHT ); // get joint angles for desired TF
-                hubo.setRightArmAngles( rArmAnglesNext, false ); // set joint angles
-                hubo.getRightArmAngles( rActualAngles ); // get current joint angles
+                rFootPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
+                rFootPoseDesired.translate(rSensorChange + rFootOrigin); // pretranslation by relative translation
+
+                if(rFootPoseDesired(1,3) + FOOT_WIDTH/2 > 0)
+                    rFootPoseDesired(1,3) = -FOOT_WIDTH/2;
+       
+                rFootPoseDesired.rotate(rSensorRot); // add rotation to top-left corner of TF matrix
+                collisionChecker.checkSelfCollision(rFootPoseDesired); // check for self-collision
+                hubo.huboLegIK( rLegAnglesNext, rFootPoseDesired, rLegAnglesCurrent, RIGHT ); // get joint angles for desired TF
+                hubo.setRightLegAngles( rLegAnglesNext, false ); // set joint angles
+                hubo.getRightLegAngles( rActualAngles ); // get current joint angles
             }
 
             if( send == true ) // if user wants to send commands the control boards
@@ -269,14 +273,12 @@ int main(int argc, char **argv)
                           << "\nTeleop Rotation Lt: \n" << lSensorRot
                           << "\nTeleop Position Rt(m): " << rSensorChange.transpose()
                           << "\nTeleop Rotation Rt: \n" << rSensorRot
-                          << "\nLeft  Arm Actual Angles (rad): " << lActualAngles.transpose()
-                          << "\nLeft  Arm Desired Angles(rad): " << lArmAnglesNext.transpose()
-                          << "\nRight Arm Actual Angles (rad): " << rActualAngles.transpose()
-                          << "\nRight Arm Desired Angles(rad): " << rArmAnglesNext.transpose()
-                          << "\nRight hand torques(N-m)(Mx,My): " << hubo.getRightHandMx() << ", " << hubo.getRightHandMy()
-                          << "\nLeft  hand torques(N-m)(Mx,My): " << hubo.getLeftHandMx() << ", " << hubo.getLeftHandMy()
-                          << "\ndqLeft : " << dqLeft.transpose()
-                          << "\ndqRight: " << dqRight.transpose()
+                          << "\nLeft  Leg Actual Angles (rad): " << lActualAngles.transpose()
+                          << "\nLeft  Leg Desired Angles(rad): " << lLegAnglesNext.transpose()
+                          << "\nRight Leg Actual Angles (rad): " << rActualAngles.transpose()
+                          << "\nRight Leg Desired Angles(rad): " << rLegAnglesNext.transpose()
+                          << "\nRight foot torques(N-m)(Mx,My): " << hubo.getRightFootMx() << ", " << hubo.getRightFootMy()
+                          << "\nLeft  foot torques(N-m)(Mx,My): " << hubo.getLeftFootMx() << ", " << hubo.getLeftFootMy()
                           << std::endl;
             }
             if(counter>=counterMax) counter=0; counter++; // reset counter if it reaches counterMax
