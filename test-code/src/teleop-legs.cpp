@@ -183,8 +183,6 @@ int main(int argc, char **argv)
     if (left == true) // if using the left arm
     {
         teleop.getPose( lSensorOrigin, lRotInitial, leftSensorNumber, true ); // get initial sensor pose
-        lLegAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0; // Define left arm intial joint angles
-        hubo.setLeftLegAngles( lLegAnglesNext ); // Set the left arm joint angles
         hubo.setLeftLegNomSpeeds( speeds ); // Set left arm nominal joint speeds
         hubo.setLeftLegNomAcc( accels ); // Set left arm nominal joint accelerations
     }
@@ -193,8 +191,6 @@ int main(int argc, char **argv)
     {
         if(left == true) updateRight = false; else updateRight = true;
         teleop.getPose( rSensorOrigin, rRotInitial, rightSensorNumber, updateRight ); // get initial sensor pose
-        rLegAnglesNext << 0, .3, 0, -M_PI/2, 0, 0; // Define right arm initial joint angles
-        hubo.setRightLegAngles( rLegAnglesNext ); // Set right arm joint angles
         hubo.setRightLegNomSpeeds( speeds ); // Set right arm nominal joint speeds
         hubo.setRightLegNomAcc( accels ); // Set right arm nomimal joint accelerations
     }
@@ -204,12 +200,14 @@ int main(int argc, char **argv)
 
     if(left == true)
     {
+        hubo.getLeftLegAngles(lLegAnglesNext);
         hubo.huboLegFK(lFootInitialPose, lLegAnglesNext, LEFT); // Get left foot pose
         lFootOrigin = lFootInitialPose.translation(); // Set relative zero for foot location
     }
 
     if(right == true)
     {
+        hubo.getRightLegAngles(rLegAnglesNext);
         hubo.huboLegFK(rFootInitialPose, rLegAnglesNext, RIGHT); // Get right foot pose
         rFootOrigin = rFootInitialPose.translation(); // Set relative zero for foot location
     }
@@ -222,7 +220,7 @@ int main(int argc, char **argv)
         dt = hubo.getTime() - ptime; // compute change in time
         ptime = hubo.getTime(); // get current time
 
-        if(dt>0) // if new data was received over ach
+        if(dt>0 || (send == false && print == true)); // if new data was received over ach
         {
             if(left == true) // if using left arm
             {
@@ -237,7 +235,6 @@ int main(int argc, char **argv)
                     lFootPoseDesired(1,3) = FOOT_WIDTH/2;
 
                 lFootPoseDesired.rotate(lSensorRot); // add rotation to top-left of TF matrix
-                collisionChecker.checkSelfCollision(lFootPoseDesired); // check for self-collision
                 hubo.huboLegIK( lLegAnglesNext, lFootPoseDesired, lLegAnglesCurrent, LEFT ); // get joint angles for desired TF
                 hubo.setLeftLegAngles( lLegAnglesNext, false ); // set joint angles
                 hubo.getLeftLegAngles( lActualAngles ); // get current joint angles
@@ -252,12 +249,11 @@ int main(int argc, char **argv)
                 rSensorChange = rSensorPos - rSensorOrigin; // compute teleop relative translation
                 rFootPoseDesired = Eigen::Matrix4d::Identity(); // create 4d identity matrix
                 rFootPoseDesired.translate(rSensorChange + rFootOrigin); // pretranslation by relative translation
-
+                // make sure feet don't cross sagittal plane
                 if(rFootPoseDesired(1,3) + FOOT_WIDTH/2 > 0)
                     rFootPoseDesired(1,3) = -FOOT_WIDTH/2;
        
                 rFootPoseDesired.rotate(rSensorRot); // add rotation to top-left corner of TF matrix
-                collisionChecker.checkSelfCollision(rFootPoseDesired); // check for self-collision
                 hubo.huboLegIK( rLegAnglesNext, rFootPoseDesired, rLegAnglesCurrent, RIGHT ); // get joint angles for desired TF
                 hubo.setRightLegAngles( rLegAnglesNext, false ); // set joint angles
                 hubo.getRightLegAngles( rActualAngles ); // get current joint angles
