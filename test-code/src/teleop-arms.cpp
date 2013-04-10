@@ -89,6 +89,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
+//    signal( SIGUSR2, daemon_sig_handler );
+//    signal( SIGALRM, daemon_sig_handler );
+//    signal( SIGINT,  daemon_sig_handler );
+//    signal( SIGQUIT, daemon_sig_handler );
+//    signal( SIGTERM, daemon_sig_handler );
+
+
     // command line argument variables
     bool left = false; // whether to set left arm angles
     bool right = false; // whether to set right arm angles
@@ -107,8 +114,9 @@ int main(int argc, char **argv)
     Vector3d rSensorChange, rHandOrigin, rSensorOrigin, rSensorPos; 
     Eigen::Matrix3d lRotInitial, rRotInitial, lSensorRot, rSensorRot;
     Eigen::Isometry3d lHandInitialPose, rHandInitialPose, lHandPoseDesired, rHandPoseDesired, lHandPoseCurrent, rHandPoseCurrent;
-    Vector6d speeds; speeds << 0.75, 0.75, 0.75, 0.75, 0.75, 0.75;
-    Vector6d accels; accels << 0.40, 0.40, 0.40, 0.40, 0.40, 0.40;
+    double a=1.5, v=1.5;
+    Vector6d speeds; speeds << a, a, a, a, a, a;
+    Vector6d accels; accels << v, v, v, v, v, v;
     int counter=0, counterMax=40;
     double dt, ptime;
     bool updateRight;
