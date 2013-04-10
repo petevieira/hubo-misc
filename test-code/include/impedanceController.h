@@ -30,7 +30,7 @@ Eigen::Vector2d impedanceEq(Eigen::Vector2d dq, double dM)
     B << 0, dM/M;
 
     dqDot = A*dq + B;
-
+    //std::cout << "A:\n" << A << "\nB:\n" << B << "\ndq: " << dq << "\ndqDot: " << dqDot << "\ndM: " << dM << std::endl;
     return dqDot;
 };
 
