@@ -13,21 +13,13 @@
 static int tty_unbuffered(int);     
 static void tty_atexit(void);
 static int tty_reset(int);
-static void treak_init();
+static void tweak_init();
 
 static struct termios save_termios;
 static int  ttysavefd = -1;
 
 double M, Q, K; // best numbers so far: M=0.008, Q=0.4, K=7.0
 double MStep, QStep, KStep;
-
-M = .008; // user set inertia (kg)
-Q = .4; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
-K = 7; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
-
-MStep = 0.05;
-QStep = 0.1;
-KStep = 1;
 
 
 /**
@@ -48,6 +40,15 @@ void usage(std::ostream& ostr) {
 
 int main(int argc, char **argv)
 {
+
+    M = 0.002; // user set inertia (kg)
+    Q = 0.1; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
+    K = 4.5; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
+
+    MStep = 0.001;
+    QStep = 0.1;
+    KStep = 1.0;
+
     // check if no arguments given, if not report usage
     if (argc < 2)
     {
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
     Eigen::Vector2d dqReb(0,0);
     Eigen::Vector2d dqRsy(0,0);
     double a=3.0, v=3.0;
-
+    double aMax=15.0, vMax=15.0;
     // Define starting joint angles for the arms 
     lArmAnglesNext << 0, 0, 0, 0, 0, 0;
     rArmAnglesNext << 0, 0, 0, 0, 0, 0;
@@ -136,8 +137,8 @@ int main(int argc, char **argv)
     }
 
     // Define arm nominal acceleration 
-    armNomAcc << a, a, a, a, a, a;
-    armNomVel << v, v, v, v, v, v;
+    armNomAcc << a, a, a, a*5/3, a, a;
+    armNomVel << v, v, v, v*5/3, v, v;
 
     // Set arm nominal accelerations 
     hubo.setLeftArmNomAcc(armNomAcc);
@@ -163,21 +164,10 @@ int main(int argc, char **argv)
     ptime = hubo.getTime(); // set initial time for dt(0)
 
     std::cout << "Executing control loop ...\n";
-/////////////////////
-    double M, Q, K; // best numbers so far: M=0.008, Q=0.4, K=7.0
-    double MStep, QStep, KStep;
 
-    M = .008; // user set inertia (kg)
-    Q = .4; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
-    K = 7; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
-    MStep = 0.05;
-    QStep = 0.1;
-    KStep = 1;
-
-    treak_init();
+    tweak_init();
 
     char c;
-//////////////////////
 
     while(!daemon_sig_quit)
     {
@@ -248,6 +238,11 @@ int main(int argc, char **argv)
                 dMx = hubo.getRightHandMx() - MdRx;
                 qNew = impedanceController(dqRsy, dMx, rsyDesired, dt);
                 hubo.setJointAngle( RSY, qNew(0), false);
+                a = fabs((hubo.getJointAngle(REB) - hubo.getJointAngleState(REB)));
+                a = (a < 0.2) ? a : 0.2;
+                a = (25*a/0.2 > 15) ? 25*a/0.2 : 15;
+                hubo.setJointNominalSpeed(REB, a);
+                hubo.setJointNominalAcceleration(REB, a);
             }
 
             // send control references
@@ -270,6 +265,8 @@ int main(int argc, char **argv)
                           << "\nRight hand torques(N-m)(MdX,Mx|MdY,My): " << MdRx << ", " << hubo.getRightHandMx() << " | " 
                                                                           << MdRy << ", " << hubo.getRightHandMy() //<< " | "
                           //<< " Fz          : " << hubo.getRightHandFz()
+                          << "\nM: " << M << "\tQ: " << Q << "\tK: " << K
+                          << "\na: " << a
                           << std::endl;
             }
             if(i>=imax) i=0; i++;
@@ -318,7 +315,7 @@ tty_atexit(void)        /* can be set up by atexit(tty_atexit) */
 }
 
 static void
-treak_init()
+tweak_init()
 {
    /* make stdin unbuffered */
     if (tty_unbuffered(STDIN_FILENO) < 0) {
