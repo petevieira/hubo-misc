@@ -273,6 +273,8 @@ int main(int argc, char **argv)
                           << "\nLeft  Leg Desired Angles(rad): " << lLegAnglesNext.transpose()
                           << "\nRight Leg Actual Angles (rad): " << rActualAngles.transpose()
                           << "\nRight Leg Desired Angles(rad): " << rLegAnglesNext.transpose()
+                          << "\nRight Foot Desired Pose: \n" << rFootPoseDesired.matrix()
+                          << "\nLeft Foot Desired Pose: \n" << lFootPoseDesired.matrix()
                           << "\nRight foot torques(N-m)(Mx,My): " << hubo.getRightFootMx() << ", " << hubo.getRightFootMy()
                           << "\nLeft  foot torques(N-m)(Mx,My): " << hubo.getLeftFootMx() << ", " << hubo.getLeftFootMy()
                           << std::endl;

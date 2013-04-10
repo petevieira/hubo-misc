@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
     M = 0.002; // user set inertia (kg)
     Q = 0.1; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
-    K = 4.5; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
+    K = 2.5; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
 
     MStep = 0.001;
     QStep = 0.1;
@@ -188,6 +188,8 @@ int main(int argc, char **argv)
                     case 'j':
                         if ( M - MStep > 0)
                             M -= MStep;
+                        if (M < 0.001)
+                            M = 0.001;
                         break;
                     case 'i':
                         Q += QStep;
