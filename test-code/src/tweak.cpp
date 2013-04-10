@@ -17,15 +17,6 @@ static int  ttysavefd = -1;
 int main(int argc, char **argv)
 {
 
-    double M, Q, K; // best numbers so far: M=0.008, Q=0.4, K=7.0
-    double MStep, QStep, KStep;
-
-    M = .008; // user set inertia (kg)
-    Q = .4; // sungmoon changed to .1 (on 4/2/2013) original was .4 user set damping (N-s/m)
-    K = 7; //.5;//sungmoon changed to 1 (on 4/2/2013) original was 7; // user set stiffness (N/m)
-    MStep = 0.05;
-    QStep = 0.1;
-    KStep = 1;
 
     treak_init();
 
