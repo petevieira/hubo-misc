@@ -30,6 +30,7 @@ int main(int argc, char **argv)
     int i=0, imax=40;
     double dt, ptime;
     double rHandCurrent=0;
+    double lHandCurrent=0;
     double handCurrentStep=0.25;
     bool print=true;
  
@@ -54,14 +55,6 @@ int main(int argc, char **argv)
         {
             if ( read(STDIN_FILENO, &c, 1) == 1) {
                 switch (c) {
-                    case 's':
-                        rHandCurrent += handCurrentStep;
-                        if(rHandCurrent > 1.0) rHandCurrent = 1.0;
-                        break;
-                    case 'x':
-                        rHandCurrent -= handCurrentStep;
-                        if (rHandCurrent < -1.0) rHandCurrent = -1.0;
-                        break;
                     case 'a':
                         lHandCurrent += handCurrentStep;
                         if(lHandCurrent > 1.0) lHandCurrent = 1.0;
@@ -70,15 +63,16 @@ int main(int argc, char **argv)
                         lHandCurrent -= handCurrentStep;
                         if (lHandCurrent < -1.0) lHandCurrent = -1.0;
                         break;
-
+                    case 's':
+                        rHandCurrent += handCurrentStep;
+                        if(rHandCurrent > 1.0) rHandCurrent = 1.0;
+                        break;
+                    case 'x':
+                        rHandCurrent -= handCurrentStep;
+                        if (rHandCurrent < -1.0) rHandCurrent = -1.0;
+                        break;
                  }
             }
-
-            hubo.passJointAngle(RF1, rHandCurrent);
-            hubo.passJointAngle(RF2, rHandCurrent);
-            hubo.passJointAngle(RF3, rHandCurrent);
-            hubo.passJointAngle(RF4, rHandCurrent);
-            hubo.passJointAngle(RF5, rHandCurrent);
 
             hubo.passJointAngle(LF1, lHandCurrent);
             hubo.passJointAngle(LF2, lHandCurrent);
@@ -86,13 +80,21 @@ int main(int argc, char **argv)
             hubo.passJointAngle(LF4, lHandCurrent);
             hubo.passJointAngle(LF5, lHandCurrent);
 
+            hubo.passJointAngle(RF1, rHandCurrent);
+            hubo.passJointAngle(RF2, rHandCurrent);
+            hubo.passJointAngle(RF3, rHandCurrent);
+            hubo.passJointAngle(RF4, rHandCurrent);
+            hubo.passJointAngle(RF5, rHandCurrent);
+
             hubo.sendControls();
 
             // print output every imax cycles
             if( i>=imax && print==true )
             {
                 std::cout //<< "\033[2J"
-                          << "HandCurrent: " << rHandCurrent
+                          << "lHandCurrent: " << lHandCurrent
+                          << "\nrHandCurrent: " << rHandCurrent
+                          << "\nc: " << c
                           << std::endl;
             }
             if(i>=imax) i=0; i++;
