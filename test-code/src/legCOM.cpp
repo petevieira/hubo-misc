@@ -1,10 +1,10 @@
-#include "hubo_plus.h"
+#include "Hubo_Control.h"
 #include <iostream>
 
  
 int main(int argc, char **argv)
 {
-    hubo_plus hubo;
+    Hubo_Control hubo;
     int i=0, imax=20;
     Vector6d angles;
     Vector3d legCOM;
