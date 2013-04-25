@@ -7,15 +7,15 @@
    achd -r push 192.168.245 fastrak-chan    // this starts sending fastrak data to hubo
 */
 
-#include "hubo_plus.h"
+#include <Hubo_Control.h>
 #include <iostream>
-
+#include "Teleop.h"
  
 int main(int argc, char **argv)
 {
-    hubo_plus hubo;
-    hubo.initFastrak();
-    int i=0, imax=20;
+    Hubo_Control hubo;
+    Teleop teleop;
+    int i=0, imax=40;
 
     hubo.setJointNominalAcceleration( LAR, 0.6 );
     hubo.setJointNominalAcceleration( LAP, 0.6 );
