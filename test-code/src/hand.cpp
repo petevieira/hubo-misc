@@ -23,6 +23,8 @@ int main(int argc, char **argv)
     //=== OBJECTS ===//
     // Create Hubo_Control object
     Hubo_Control hubo;
+
+    redirectSigs();
 //    std::cout << "Daemonizing as impedanceCtrl\n";
 //    Hubo_Control hubo("impedanceCtrl");
 
@@ -100,6 +102,7 @@ int main(int argc, char **argv)
             if(i>=imax) i=0; i++;
         }
     }
+    tty_reset(STDIN_FILENO);
     return 0;
 }
 
