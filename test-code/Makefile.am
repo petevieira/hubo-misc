@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 ctrllibs = -lm -lach -lc -lhuboctrl -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = hand sensors impCtrl-arms impCtrl-legs teleop-arms teleop-legs#legIKTest fastrak-balance fastrak-dremelIK legTraj
+bin_PROGRAMS = hand sensors impCtrl-arms impCtrl-legs teleop-arms teleop-legs
 
 include_HEADERS = include/Teleop.h
 
