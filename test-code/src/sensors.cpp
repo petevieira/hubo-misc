@@ -13,22 +13,26 @@ int main(int argc, char **argv)
 
     ptime = hubo.getTime();
 
+    // redirect signals so Ctrl-C causes graceful termination
     redirectSigs();
 
+    // main loop
     while(!daemon_sig_quit)
     {
         hubo.update();
 
+        // get change in time
         dt = hubo.getTime() - ptime;
-        
+
+        // if new data was received...
         if( dt > 0 )
         {
             i++; if(i>imax) i=0;
 
             // get joint states for arms and legs
-            hubo.getRightArmAngleStates(rightArmAngleStates);            
+            hubo.getRightArmAngleStates(rightArmAngleStates); 
             hubo.getLeftArmAngleStates(leftArmAngleStates);            
-            hubo.getRightLegAngleStates(rightLegAngleStates);            
+            hubo.getRightLegAngleStates(rightLegAngleStates);
             hubo.getLeftLegAngleStates(leftLegAngleStates);            
 
             // get joint states for left fingers
@@ -48,29 +52,29 @@ int main(int argc, char **argv)
             if( i==imax )
             {
                 std::cout << "====IMU===="
-                          << "\nImuAngleX:  " << hubo.getAngleX() 
-                          << "\nImuAngleY:  " << hubo.getAngleY()
-                          << "\nImuRotVelX: " << hubo.getRotVelX()
-                          << "\nImuRotVelY: " << hubo.getRotVelY()
+                          << "\nImuAngle(X,Y):  " << hubo.getAngleX() << ", "
+                                                  << hubo.getAngleY()
+                          << "\nImuRotVel(X,Y): " << hubo.getRotVelX() << ", "
+                                                  << hubo.getRotVelY()
                           << "\n\n====F/T Hands===="
                           << "\nRightHandMx: " << hubo.getRightHandMx()
                           << "\nRightHandMy: " << hubo.getRightHandMy()
                           << "\nLeftHandMx:  " << hubo.getLeftHandMx()
                           << "\nLeftHandMy:  " << hubo.getLeftHandMy()
                           << "\n\n====F/T Feet===="
-                          << "\nRightFootMx: " << hubo.getRightFootMx()
-                          << "\nRightFootMy: " << hubo.getRightFootMy()
+                          << "\nRightFootM(X,Y): " << hubo.getRightFootMx() << ", "
+                                                   << hubo.getRightFootMy()
                           << "\nRightFootFz: " << hubo.getRightFootFz()
-                          << "\nLeftFootMx:  " << hubo.getLeftFootMx()
-                          << "\nLeftFootMy:  " << hubo.getLeftFootMy()
+                          << "\nLeftFootM(X,Y):  " << hubo.getLeftFootMx() << ", "
+                                                   << hubo.getLeftFootMy()
                           << "\nLeftFootFz:  " << hubo.getLeftFootFz()
                           << "\n\n====Feet Tilt===="
-                          << "\nRightTiltX: " << hubo.getRightTiltX()
-                          << "\nRightTiltY: " << hubo.getRightTiltY()
-                          << "\nRightTiltZ: " << hubo.getRightTiltZ()
-                          << "\nLeftTiltX:  " << hubo.getLeftTiltX()
-                          << "\nLeftTiltY:  " << hubo.getLeftTiltY()
-                          << "\nLeftTiltZ:  " << hubo.getLeftTiltZ()
+                          << "\nRightTilt(X,Y,Z): " << hubo.getRightTiltX() << ", "
+                                                    << hubo.getRightTiltY() << ", "
+                                                    << hubo.getRightTiltZ()
+                          << "\nLeftTilt(X,Y,Z):  " << hubo.getLeftTiltX() << ", "
+                                                    << hubo.getLeftTiltY() << ", "
+                                                    << hubo.getLeftTiltZ()
                           << "\n\n====Arm States===="
                           << "\nRight Arm: " << rightArmAngleStates.transpose()
                           << "\nLeft Arm:  " << leftArmAngleStates.transpose()
@@ -81,10 +85,10 @@ int main(int argc, char **argv)
                           << "\nRight Fingers: " << rf.transpose()
                           << "\nLeft Fingers:  " << lf.transpose()
                           << "\n\n====Aux States===="
-                          << "\nWaist:    " << hubo.getJointAngleState(WST)
-                          << "\nNeck Yaw: " << hubo.getJointAngleState(NKY)
-                          << "\nNeck 1:   " << hubo.getJointAngleState(NK1)
-                          << "\nNeck 2:   " << hubo.getJointAngleState(NK2)
+                          << "\nWaist:       " << hubo.getJointAngleState(WST)
+                          << "\nNeck(Y,1,2): " << hubo.getJointAngleState(NKY) << ", "
+                                               << hubo.getJointAngleState(NK1) << ", "
+                                               << hubo.getJointAngleState(NK2)
                           << std::endl;
             }
         }
