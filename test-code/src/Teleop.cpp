@@ -1,6 +1,6 @@
 #include "Teleop.h"
 
-Teleop::Teleop(const char *teleopDeviceName)
+Teleop::Teleop(const char *teleopDeviceName) : TRACKER_NAME(teleopDeviceName)
 {
     initTeleop(teleopDeviceName);
 }
@@ -14,12 +14,10 @@ flag_t Teleop::initTeleop(const char *teleopDeviceName, bool assert)
 {
     if(0 == strcmp(teleopDeviceName,"liberty"))
     {
-        TRACKER_NAME = teleopDeviceName;
         NUM_OF_SENSORS = 8;
     }
     else if(0 == strcmp(teleopDeviceName,"fastrak"))
     {
-        TRACKER_NAME = teleopDeviceName;
         NUM_OF_SENSORS = 4;
     }
     else
@@ -55,30 +53,69 @@ flag_t Teleop::getPose( Eigen::Vector3d &position, Eigen::Quaterniond &quat, int
     ach_status_t r = ACH_OK;
     int s;
 
+    if(0 == strcmp(TRACKER_NAME,"liberty"))
+    {
+        liberty_t teleop;
+    }
+    else if(0 == strcmp(TRACKER_NAME,"fastrak"))
+    {
+        fastrak_t teleop;
+    }
+
     if(update) {
         size_t fs;
-        r = ach_get( &chan_teleop, teleop.sensorData, sizeof(teleop.sensorData), &fs, NULL, ACH_O_LAST );
-        if ( r == ACH_OK ) {
-            assert( sizeof(teleop.sensorData) == fs );
-        } else {
-            syslog(LOG_ERR, "The ach_get() call failed: %s\n", ach_result_to_string(r));
+        if(0 == strcmp(TRACKER_NAME, "liberty"))
+        {
+            r = ach_get( &chan_teleop, libertyData.sensorData, sizeof(libertyData.sensorData), &fs, NULL, ACH_O_LAST );
+            if ( r == ACH_OK ) {
+                assert( sizeof(libertyData.sensorData) == fs );
+            } else {
+                syslog(LOG_ERR, "The ach_get() call failed: %s\n", ach_result_to_string(r));
+            }
+        }
+        else if(0 == strcmp(TRACKER_NAME, "fastrak"))
+        {
+            r = ach_get( &chan_teleop, fastrakData.sensorData, sizeof(fastrakData.sensorData), &fs, NULL, ACH_O_LAST );
+            if ( r == ACH_OK ) {
+                assert( sizeof(fastrakData.sensorData) == fs );
+            } else {
+                syslog(LOG_ERR, "The ach_get() call failed: %s\n", ach_result_to_string(r));
+            }
         }
     }
 
     sensor--;
     
-    if ( (sensor >= 0) && (sensor < 8) ) {
-        position[0] = teleop.sensorData[sensor][0]/teleopScale;
-        position[1] = teleop.sensorData[sensor][1]/teleopScale;
-        position[2] = teleop.sensorData[sensor][2]/teleopScale;
+    if(0 == strcmp(TRACKER_NAME, "liberty"))
+    {
+        if ( (sensor >= 0) && (sensor < NUM_OF_SENSORS) ) {
+            position[0] = libertyData.sensorData[sensor][0]/teleopScale;
+            position[1] = libertyData.sensorData[sensor][1]/teleopScale;
+            position[2] = libertyData.sensorData[sensor][2]/teleopScale;
         
-        quat.w() = (double)teleop.sensorData[sensor][3];
-        quat.x() = (double)teleop.sensorData[sensor][4];
-        quat.y() = (double)teleop.sensorData[sensor][5];
-        quat.z() = (double)teleop.sensorData[sensor][6];
-    } else
-        return SENSOR_OOB;
-
+            quat.w() = (double)libertyData.sensorData[sensor][3];
+            quat.x() = (double)libertyData.sensorData[sensor][4];
+            quat.y() = (double)libertyData.sensorData[sensor][5];
+            quat.z() = (double)libertyData.sensorData[sensor][6];
+        } else
+            return SENSOR_OOB;
+    }
+    else if(0 == strcmp(TRACKER_NAME, "fastrak"))
+    {
+         if ( (sensor >= 0) && (sensor < NUM_OF_SENSORS) ) {
+            position[0] = fastrakData.sensorData[sensor][0]/teleopScale;
+            position[1] = fastrakData.sensorData[sensor][1]/teleopScale;
+            position[2] = fastrakData.sensorData[sensor][2]/teleopScale;
+        
+            quat.w() = (double)fastrakData.sensorData[sensor][3];
+            quat.x() = (double)fastrakData.sensorData[sensor][4];
+            quat.y() = (double)fastrakData.sensorData[sensor][5];
+            quat.z() = (double)fastrakData.sensorData[sensor][6];
+        } else
+            return SENSOR_OOB;
+       
+    }
+ 
     if( ACH_OK != r )
         return TRACKER_STALE;
     return SUCCESS;
