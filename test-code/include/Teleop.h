@@ -16,6 +16,8 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 #include <stdint.h>
+#include <stdio.h>
+
 #include <ach.h>
 
 #define EXIT_SUCCESS 0
@@ -62,19 +64,19 @@ public:
 
     /* Function: getPose( Eigen::Vector3d &position, Eigen::Quaterniond &quat, int sensor=1, bool update=true )
      * Description: Gets the sensor pose as a Eigen Vector3d for the position and a Quaternion of doubles for the orientation
-     * Return: Returns a success/fall flag
+     * Return: Returns a success/fail flag
     */
     flag_t getPose( Eigen::Vector3d &position, Eigen::Quaterniond &quat, int sensor=1, bool update=true );
 
     /* Function: getPose( Eigen::Vector3d &position, Eigen::Matrix3d &rotation, int sensor=1, bool update=true )
      * Description: Gets the sensor pose as a 3x1 vector for the position and a 3x3 matrix of doubles for the orientation
-     * Return: Returns a success/fall flag
+     * Return: Returns a success/fail flag
     */
     flag_t getPose( Eigen::Vector3d &position, Eigen::Matrix3d &rotation, int sensor=1, bool update=true );
 
     /* Function: getPose( Eigen::Isometry3d &tf, int sensor=1, bool update=true )
      * Description: Gets the sensor pose as a isometry3d tranformation matrix
-     * Return: Returns a success/fall flag
+     * Return: Returns a success/fail flag
     */
     flag_t getPose( Eigen::Isometry3d &tf, int sensor=1, bool update=true );
 
@@ -86,13 +88,18 @@ public:
     double teleopScale;
     typedef struct
     {
+        float sensorData[4][NUM_OF_DATA];
+    } fastrak_t;
+
+    typedef struct
+    {
         float sensorData[8][NUM_OF_DATA];
-    } teleop_t;
+    } liberty_t;
 
 private:
-    teleop_t teleop;
 
+    fastrak_t fastrakData;
+    liberty_t libertyData;
 };
 
 #endif // TELEOP_H
-
