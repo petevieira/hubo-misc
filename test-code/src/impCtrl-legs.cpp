@@ -136,9 +136,9 @@ int main(int argc, char **argv)
 //    Hubo_Control hubo("impedanceCtrl");
 
     //=== LOCAL VARIABLES ===//
-    Vector6d rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr;
-    Vector6d lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
-    Vector6d nomAcc, nomVel;
+    LegVector rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr;
+    LegVector lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
+    LegVector nomAcc, nomVel;
     Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent, wristTF;
     int i=0, imax=40;
     double dt, ptime;
