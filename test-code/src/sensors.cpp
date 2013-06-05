@@ -7,8 +7,8 @@ int main(int argc, char **argv)
     Hubo_Control hubo;
     int i=0, imax=30;
     double ptime, dt;
-    Vector6d rightArmAngleStates, leftArmAngleStates;
-    Vector6d rightLegAngleStates, leftLegAngleStates;
+    ArmVector rightArmAngleStates, leftArmAngleStates;
+    LegVector rightLegAngleStates, leftLegAngleStates;
     Eigen::Matrix<double,5,1> rf, lf;
 
     ptime = hubo.getTime();
