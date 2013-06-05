@@ -103,15 +103,15 @@ int main(int argc, char **argv)
     const char *teleopDeviceName = "liberty"; // name of teleop device
 
     // local variables
-    Vector6d lActualAngles, lLegAnglesNext, lLegAnglesCurrent;
-    Vector6d rActualAngles, rLegAnglesNext, rLegAnglesCurrent;
+    LegVector lActualAngles, lLegAnglesNext, lLegAnglesCurrent;
+    LegVector rActualAngles, rLegAnglesNext, rLegAnglesCurrent;
     Vector3d lFootOrigin, lSensorChange, lSensorOrigin, lSensorPos;
     Vector3d rFootOrigin, rSensorChange, rSensorOrigin, rSensorPos; 
     Eigen::Matrix3d lRotInitial, rRotInitial, lSensorRot, rSensorRot;
     Eigen::Isometry3d lFootInitialPose, lFootPoseCurrent, lFootPoseDesired;
     Eigen::Isometry3d rFootInitialPose, rFootPoseCurrent, rFootPoseDesired;
-    Vector6d speeds; speeds << 0.75, 0.75, 0.75, 0.75, 0.75, 0.75;
-    Vector6d accels; accels << 0.40, 0.40, 0.40, 0.40, 0.40, 0.40;
+    LegVector speeds; speeds << 0.75, 0.75, 0.75, 0.75, 0.75, 0.75;
+    LegVector accels; accels << 0.40, 0.40, 0.40, 0.40, 0.40, 0.40;
     double initialFootHeight = 0.1;
     double dt, ptime;
     int counter=0, counterMax=50;
