@@ -99,9 +99,9 @@ int main(int argc, char **argv)
 //    Hubo_Control hubo("impedanceCtrl");
 
     //=== LOCAL VARIABLES ===//
-    Vector6d rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr;
-    Vector6d lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
-    Vector6d armNomAcc, armNomVel;
+    ArmVector rActualAngles, rArmAnglesCurrent, rArmAnglesNext, checkr;
+    ArmVector lActualAngles, lArmAnglesNext, lArmAnglesCurrent, checkl;
+    ArmVector armNomAcc, armNomVel;
     Eigen::Isometry3d lcurrEE, rcurrEE, lTransf, rTransf, lHandCurrent, rHandCurrent, wristTF;
     int i=0, imax=40;
     double dt, ptime;
@@ -113,18 +113,18 @@ int main(int argc, char **argv)
     double a=3.0, v=3.0;
     double aMax=15.0, vMax=15.0;
     // Define starting joint angles for the arms 
-    lArmAnglesNext << 0, 0, 0, 0, 0, 0;
-    rArmAnglesNext << 0, 0, 0, 0, 0, 0;
+    lArmAnglesNext << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+    rArmAnglesNext << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
  
     // Set the arm joint angles and send commands to the control daemon
     if(left == true)
     {
-        lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0;
+        lArmAnglesNext << 0, -.3, 0, -M_PI/2, 0, 0, 0, 0, 0, 0;
         hubo.setLeftArmAngles( lArmAnglesNext, true );
     }
     if(right == true)
     {
-        rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0;
+        rArmAnglesNext << 0, .3, 0, -M_PI/2, 0, 0, 0, 0, 0, 0;
         hubo.setRightArmAngles( rArmAnglesNext, true );
     }
     // While the norm of the right arm angles is greater than 0.075
@@ -137,8 +137,8 @@ int main(int argc, char **argv)
     }
 
     // Define arm nominal acceleration 
-    armNomAcc << a, a, a, a*5/3, a, a;
-    armNomVel << v, v, v, v*5/3, v, v;
+    armNomAcc << a, a, a, a*5/3, a, a, 0, 0, 0, 0;
+    armNomVel << v, v, v, v*5/3, v, v, 0, 0, 0, 0;
 
     // Set arm nominal accelerations 
     hubo.setLeftArmNomAcc(armNomAcc);
