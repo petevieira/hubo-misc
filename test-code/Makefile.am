@@ -5,9 +5,12 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 ctrllibs = -lm -lach -lc -lhuboctrl -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = hand sensors impCtrl-arms impCtrl-legs teleop-arms teleop-legs
+bin_PROGRAMS = joint-manip-test hand sensors impCtrl-arms impCtrl-legs teleop-arms teleop-legs
 
 include_HEADERS = include/Teleop.h
+
+joint_manip_test_SOURCES = src/joint-manip-test.cpp
+joint_manip_test_LDADD = $(ctrllibs)
 
 fastrak_balance_SOURCES = src/fastrak-balance.cpp
 fastrak_balance_LDADD = $(ctrllibs) libfastrak.la
