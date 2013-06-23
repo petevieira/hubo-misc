@@ -29,15 +29,12 @@ int main(int argc, char** argv)
 
     // Set joint angles for both arms
     fprintf(stderr, "Arm Joint Count: %d\n", ARM_JOINT_COUNT);
-//    double ltArmAngles[ARM_JOINT_COUNT];
-//    double rtArmAngles[ARM_JOINT_COUNT];
+    double ltArmAngles[ARM_JOINT_COUNT] = {-M_PI/2, M_PI/2, 0, -M_PI/2, 0, 0, 0, 0, 0, 0};
+    double rtArmAngles[ARM_JOINT_COUNT] = {-M_PI/2, -M_PI/2, 0, -M_PI/2, 0, 0, 0, 0, 0, 0};
 
-//    ltArmAngles = {-M_PI/2, M_PI/2, -M_PI/2, 0, 0, 0, 0, 0, 0, 0};
-//    rtArmAngles = {-M_PI/2, -M_PI/2, -M_PI/2, 0, 0, 0, 0, 0, 0, 0};
+    memcpy( &manip_cmd.arm_angles[LEFT], &ltArmAngles, sizeof(ltArmAngles) );
+    memcpy( &manip_cmd.arm_angles[RIGHT], &rtArmAngles, sizeof(rtArmAngles) );
 
-//    manip_cmd.arm_angles[LEFT][ARM_JOINT_COUNT] = ltArmAngles;
-//    manip_cmd.arm_angles[RIGHT][ARM_JOINT_COUNT] = rtArmAngles;
-
-//    r = ach_put( &chan_manip_cmd, &manip_cmd, sizeof(hubo_manip_cmd_t) );
-//    fprintf(stderr, "ach_put manip_cmd result: %s\n", ach_result_to_string(r));
+    r = ach_put( &chan_manip_cmd, &manip_cmd, sizeof(hubo_manip_cmd_t) );
+    fprintf(stderr, "ach_put manip_cmd result: %s\n", ach_result_to_string(r));
 }
