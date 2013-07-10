@@ -29,8 +29,8 @@ int main(int argc, char** argv)
 
     // Set joint angles for both arms
     fprintf(stderr, "Arm Joint Count: %d\n", ARM_JOINT_COUNT);
-    double ltArmAngles[ARM_JOINT_COUNT] = {-M_PI/2, M_PI/2, 0, -M_PI/2, 0, 0, 0, 0, 0, 0};
-    double rtArmAngles[ARM_JOINT_COUNT] = {-M_PI/2, -M_PI/2, 0, -M_PI/2, 0, 0, 0, 0, 0, 0};
+    double ltArmAngles[ARM_JOINT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double rtArmAngles[ARM_JOINT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     memcpy( &manip_cmd.arm_angles[LEFT], &ltArmAngles, sizeof(ltArmAngles) );
     memcpy( &manip_cmd.arm_angles[RIGHT], &rtArmAngles, sizeof(rtArmAngles) );
