@@ -25,33 +25,11 @@ int main(int argc, char **argv)
     while(1)
     {
         if ( read(STDIN_FILENO, &c, 1) == 1) {
-            switch (c) {
-                case 'u':
-                    M += MStep;
-                    break;
-                case 'j':
-                    if ( M - MStep > 0)
-                        M -= MStep;
-                    break;
-                case 'i':
-                    Q += QStep;
-                    break;
-                case 'k':
-                    if ( Q - QStep > 0)
-                        Q -= QStep;
-                    break;
-                case 'o':
-                    K += KStep;
-                    break;
-                case 'l':
-                    if ( K - KStep > 0)
-                        K -= KStep;
-                    break;
-            }
-            std::cout << "M: " << M  << "   " << "Q: " << Q << "   " << "K: " << K << std::endl; 
+            std::cout << "Pressed " << c << "\n";
         }
 
     }
+    tty_reset(STDIN_FILENO);
     return 0;
 }
 
