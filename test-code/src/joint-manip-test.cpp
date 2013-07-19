@@ -37,4 +37,5 @@ int main(int argc, char** argv)
 
     r = ach_put( &chan_manip_cmd, &manip_cmd, sizeof(hubo_manip_cmd_t) );
     fprintf(stderr, "ach_put manip_cmd result: %s\n", ach_result_to_string(r));
+    std::cout << "manip cmd\n" << manip_cmd << std::endl;
 }

@@ -5,9 +5,12 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -L/usr/local/lib -I/usr/include/eigen3
 ctrllibs = -lm -lach -lc -lhuboctrl -ldaemonizer -lrt -lhuboparams
 
 # List the binary files you want to generate:
-bin_PROGRAMS = joint-manip-test hand sensors impCtrl-arms impCtrl-legs teleop-arms teleop-legs go-home
+bin_PROGRAMS = joint-manip-test tweak sensors impCtrl-arms impCtrl-legs teleop-arms teleop-legs go-home #keyboardTest
 
-include_HEADERS = include/Teleop.h
+include_HEADERS = include/Teleop.h #include/KeyboardInput.h
+
+#keyboardTest_SOURCES = src/keyboardTest.cpp
+#keyboardTest_LDADD = $(ctrllibs) libkeyboardInput.la
 
 joint_manip_test_SOURCES = src/joint-manip-test.cpp
 joint_manip_test_LDADD = $(ctrllibs)
@@ -42,10 +45,15 @@ impCtrl_arms_LDADD = $(ctrllibs)
 impCtrl_legs_SOURCES = src/impCtrl-legs.cpp
 impCtrl_legs_LDADD = $(ctrllibs)
 
-hand_SOURCES = src/hand.cpp
-hand_LDADD = $(ctrllibs)
+tweak_SOURCES = src/tweak.cpp
+tweak_LDADD = $(ctrllibs)
 
 teleopdir = /usr/lib
 teleop_LTLIBRARIES = libteleop.la
 libteleop_la_SOURCES = src/Teleop.cpp
 libteleop_la_LDFLAGS = -module -avoid-version -shared
+
+#keyboardInputdir = /usr/lib
+#keyboardInput_LTLIBRARIES = libkeyboardInput.la
+#libkeyboardInput_la_SOURCES = src/KeyboardInput.cpp
+#libkeyboardInput_la_LDFLAGS = -module -avoid-version -shared
